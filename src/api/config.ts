@@ -1,0 +1,17 @@
+export const API_URL =
+  import.meta.env.VITE_API_URL ?? 'http://localhost:3000/kahoot-api'
+
+export const AUTH_API_URL =
+  import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:3001/auth'
+
+/** The API origin used to turn the relative private imageUrl into a request. */
+export const API_ORIGIN = new URL(API_URL, window.location.origin).origin
+
+/** 5 MiB, matching the API default MAX_FILE_SIZE. */
+export const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+export const ACCEPTED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+] as const
