@@ -47,7 +47,7 @@ describe('clientes HTTP', () => {
     const api = createHttp({ baseURL: API_URL, getToken: () => 'jwt-demo', onUnauthorized: vi.fn() })
     expect(api.defaults.headers.common['Content-Type']).toBeUndefined()
     const apiMock = new MockAdapter(api)
-    apiMock.onPut(/\/image$/).reply((config) => {
+    apiMock.onPost(/\/image$/).reply((config) => {
       expect(config.data).toBeInstanceOf(FormData)
       const headers = config.headers as unknown as Record<string, string>
       expect(headers.Authorization ?? headers.authorization).toBe('Bearer jwt-demo')

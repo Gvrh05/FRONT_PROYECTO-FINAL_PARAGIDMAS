@@ -89,7 +89,7 @@ export async function uploadQuestionImage(
   const body = new FormData()
   body.append('image', file)
   // Never set Content-Type manually: the browser adds the multipart boundary.
-  const { data } = await client.put<QuestionResource>(
+  const { data } = await client.post<QuestionResource>(
     `${base}/${quizId}/questions/${questionId}/image`,
     body,
   )
@@ -109,7 +109,12 @@ export async function fetchQuestionImage(
   imageUrl: string,
   signal?: AbortSignal,
 ): Promise<Blob> {
-  const { data } = await client.get<Blob>(imageUrl, {
+  const apiOrigin = new URL(
+    client.defaults.baseURL ?? '',
+    window.location.origin,
+  ).origin
+  const publicUrl = new URL(imageUrl, apiOrigin).toString()
+  const { data } = await client.get<Blob>(publicUrl, {
     responseType: 'blob',
     signal,
   })

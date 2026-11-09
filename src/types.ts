@@ -12,6 +12,7 @@ export interface LoginResponse {
 export interface QuizSummary {
   id: string
   authorId: string
+  isDemo?: boolean
   title: string
   description: string | null
   coverImageUrl: string | null

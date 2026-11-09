@@ -41,11 +41,18 @@ describe('flujo principal de autoría', () => {
 
     const user = userEvent.setup()
     render(<App />)
+    expect(screen.getByRole('heading', { name: /Convierte cada clase/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
     await user.type(screen.getByLabelText('Usuario'), 'docente')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
 
     expect(await screen.findByText('Todavía no tienes cuestionarios.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Quices/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Resultados/ }))
+    expect(screen.getByRole('heading', { name: 'Resultados' })).toBeInTheDocument()
+    expect(screen.getByLabelText('PIN de sala')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Quices/ }))
     expect(created.some((item) => item.baseURL === 'http://localhost:3000/kahoot-api')).toBe(true)
     await user.click(screen.getByRole('button', { name: 'Crear mi primer cuestionario' }))
     await user.type(screen.getByLabelText('Título'), 'Ciencias')
@@ -83,6 +90,7 @@ describe('flujo principal de autoría', () => {
 
     const user = userEvent.setup()
     render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
     await user.type(screen.getByLabelText('Usuario'), 'docente')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
@@ -133,6 +141,7 @@ describe('flujo principal de autoría', () => {
 
     const user = userEvent.setup()
     render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
     await user.type(screen.getByLabelText('Usuario'), 'docente1')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))

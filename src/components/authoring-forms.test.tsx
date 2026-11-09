@@ -108,9 +108,9 @@ describe('formularios de autoría', () => {
       expect(body).not.toHaveProperty('points')
       return [201, question]
     })
-    mock.onPut('/quizzes/quiz-1/questions/question-9/image').reply(() => {
+    mock.onPost('/quizzes/quiz-1/questions/question-9/image').reply(() => {
       uploadCount += 1
-      return uploadCount === 1 ? [415, { error: 'Unsupported Media Type' }] : [200, { ...question, imageUrl: '/kahoot-api/quizzes/quiz-1/questions/question-9/image' }]
+      return uploadCount === 1 ? [415, { error: 'Unsupported Media Type' }] : [200, { ...question, imageUrl: '/uploads/questions/9f45e2ea-e039-4fe1-967e-725264f9b781.png' }]
     })
 
     const user = userEvent.setup()
@@ -131,8 +131,7 @@ describe('formularios de autoría', () => {
     await user.click(screen.getByRole('button', { name: 'Reintentar carga de imagen' }))
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
     expect(uploadCount).toBe(2)
-    expect(mock.history.post).toHaveLength(1)
-    expect(mock.history.put).toHaveLength(2)
+    expect(mock.history.post).toHaveLength(3)
     mock.restore()
   })
 
@@ -141,7 +140,7 @@ describe('formularios de autoría', () => {
     const question: QuestionResource = {
       id: 'question-10', quizId: 'quiz-1', questionText: 'Pregunta anterior',
       timeLimitSeconds: 45, points: 2500,
-      imageUrl: '/kahoot-api/quizzes/quiz-1/questions/question-10/image',
+      imageUrl: '/uploads/questions/6f8214f2-7f0e-4d9c-a9c3-92015151a10b.png',
       options: [
         { id: 'e1', text: 'Primera', isCorrect: false },
         { id: 'e2', text: 'Segunda', isCorrect: true },

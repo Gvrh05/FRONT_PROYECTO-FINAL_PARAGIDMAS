@@ -78,7 +78,7 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
   return (
     <section aria-labelledby="quiz-list-title">
       <div className="section-header">
-        <h2 id="quiz-list-title">Mis cuestionarios</h2>
+      <h2 id="quiz-list-title">Todos los cuestionarios</h2>
         <button type="button" onClick={onCreate}>
           Nuevo cuestionario
         </button>
@@ -120,6 +120,7 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
             <li key={quiz.id} className="card quiz-item">
               <div>
                 <h3>{quiz.title}</h3>
+                {quiz.isDemo ? <span className="badge">Demo · solo lectura</span> : null}
                 {quiz.description ? (
                   <p className="muted">{quiz.description}</p>
                 ) : null}
@@ -131,17 +132,21 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
                 <button type="button" onClick={() => onOpen(quiz.id)}>
                   Abrir
                 </button>
-                <button type="button" onClick={() => onEdit(quiz)}>
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={() => setDeleteTarget(quiz)}
-                  disabled={deleting}
-                >
-                  Eliminar
-                </button>
+                {!quiz.isDemo ? (
+                  <>
+                    <button type="button" onClick={() => onEdit(quiz)}>
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => setDeleteTarget(quiz)}
+                      disabled={deleting}
+                    >
+                      Eliminar
+                    </button>
+                  </>
+                ) : null}
               </div>
             </li>
           ))}

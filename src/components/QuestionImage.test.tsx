@@ -42,7 +42,7 @@ describe('imagen privada de pregunta', () => {
       logout: vi.fn(),
     })
 
-    const imageUrl = '/kahoot-api/quizzes/quiz-1/questions/question-1/image'
+    const imageUrl = '/uploads/questions/da6e2502-07ad-4904-b38f-c0e8aa3e5b32.png'
     const question: QuestionResource = {
       id: 'question-1', quizId: 'quiz-1', questionText: 'Pregunta',
       timeLimitSeconds: 20, points: 1000, imageUrl,
@@ -53,12 +53,12 @@ describe('imagen privada de pregunta', () => {
         { id: 'o4', text: 'D', isCorrect: false },
       ],
     }
-    imageMock.onGet(imageUrl).reply((config) => {
+    imageMock.onGet(`http://localhost:3000${imageUrl}`).reply((config) => {
       expect(config.params).toBeUndefined()
       expect(String(config.headers?.Authorization ?? config.headers?.authorization)).toBe('Bearer private-token')
       return [200, new Blob(['private image'], { type: 'image/png' }), { 'Content-Type': 'image/png' }]
     })
-    apiMock.onPut('/quizzes/quiz-1/questions/question-1/image').reply(415, { error: 'Unsupported Media Type' })
+    apiMock.onPost('/quizzes/quiz-1/questions/question-1/image').reply(415, { error: 'Unsupported Media Type' })
     apiMock.onDelete('/quizzes/quiz-1/questions/question-1/image').reply(204)
 
     const onChanged = vi.fn()
@@ -78,7 +78,7 @@ describe('imagen privada de pregunta', () => {
     await user.click(screen.getByRole('button', { name: 'Quitar imagen' }))
     await user.click(screen.getByRole('dialog').querySelector('button.danger')!)
     await waitFor(() => expect(onChanged).toHaveBeenCalledWith({ ...question, imageUrl: null }))
-    expect(apiMock.history.put).toHaveLength(1)
+    expect(apiMock.history.post).toHaveLength(1)
     expect(apiMock.history.delete).toHaveLength(1)
     view.unmount()
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:authenticated-image')
@@ -103,9 +103,9 @@ describe('imagen privada de pregunta', () => {
       login: vi.fn(),
       logout: vi.fn(),
     })
-    const imageUrl = '/kahoot-api/quizzes/quiz-1/questions/question-1/image'
+    const imageUrl = '/uploads/questions/da6e2502-07ad-4904-b38f-c0e8aa3e5b32.png'
     let resolveImage: ((response: [number, unknown]) => void) | undefined
-    mock.onGet(imageUrl).reply(() => new Promise((resolve) => { resolveImage = resolve }))
+    mock.onGet(`http://localhost:3000${imageUrl}`).reply(() => new Promise((resolve) => { resolveImage = resolve }))
     const question: QuestionResource = {
       id: 'question-1', quizId: 'quiz-1', questionText: 'Pregunta',
       timeLimitSeconds: 20, points: 1000, imageUrl,
