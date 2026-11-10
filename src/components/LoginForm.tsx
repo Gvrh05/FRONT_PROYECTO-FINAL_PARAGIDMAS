@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSession } from '../session/session'
 
-export function LoginForm() {
+export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   const { login, notice } = useSession()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -21,6 +21,7 @@ export function LoginForm() {
     try {
       await login(username.trim(), password)
       setPassword('')
+      onSuccess?.()
     } catch (loginError) {
       setError(
         loginError instanceof Error

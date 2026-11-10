@@ -63,7 +63,7 @@ export function QuestionForm({
 
   function updateOption(index: number, value: string) {
     setDraft((current) => {
-      const options = [...current.options] as [string, string, string, string]
+      const options = [...current.options]
       options[index] = value
       return { ...current, options }
     })
@@ -227,6 +227,16 @@ export function QuestionForm({
           ) : null}
         </div>
 
+        <div className="field">
+          <label htmlFor="question-kind">Tipo de pregunta</label>
+          <select id="question-kind" value={draft.kind ?? 'MULTIPLE_CHOICE'} disabled={pending || Boolean(partial)} onChange={(event) => {
+            const kind = event.target.value === 'TRUE_FALSE' ? 'TRUE_FALSE' : 'MULTIPLE_CHOICE'
+            setDraft((current) => ({ ...current, kind, options: kind === 'TRUE_FALSE' ? ['Verdadero', 'Falso'] : ['', '', '', ''], correctIndex: null }))
+          }}>
+            <option value="MULTIPLE_CHOICE">Cuatro opciones</option>
+            <option value="TRUE_FALSE">Verdadero / Falso</option>
+          </select>
+        </div>
         <fieldset className="options">
           <legend>Opciones y respuesta correcta</legend>
           {draft.options.map((text, index) => (
@@ -237,6 +247,7 @@ export function QuestionForm({
                   id={`option-${index}`}
                   name={`option-${index}`}
                   value={text}
+                  readOnly={draft.kind === 'TRUE_FALSE'}
                   onChange={(event) => updateOption(index, event.target.value)}
                   aria-invalid={Boolean(errors[`option-${index}`])}
                   disabled={pending || Boolean(partial)}
@@ -284,7 +295,9 @@ export function QuestionForm({
               <p className="field-error">{errors.timeLimitSeconds}</p>
             ) : null}
           </div>
-          <div className="field">
+          {draft.kind === 'TRUE_FALSE' ? (
+            <p className="muted">En la partida, cada respuesta correcta vale 1 punto.</p>
+          ) : <div className="field">
             <label htmlFor="points">Puntos</label>
             <input
               id="points"
@@ -298,10 +311,10 @@ export function QuestionForm({
             {errors.points ? (
               <p className="field-error">{errors.points}</p>
             ) : null}
-          </div>
+          </div>}
         </div>
 
-        {editing ? (
+        {editing && draft.kind !== 'TRUE_FALSE' ? (
           <p className="muted">
             Si no cambias el tiempo, los puntos o la imagen, se conservan los
             valores actuales.

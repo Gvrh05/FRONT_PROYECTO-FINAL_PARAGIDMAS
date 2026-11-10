@@ -1,6 +1,7 @@
+import { z } from 'zod'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getSession, participantsUpdatedSchema, roomCodeSchema, sessionStartedSchema, snapshotSchema } from '../api/gameSessions'
-import type { Participant, Session, SessionSnapshot } from '../api/gameSessions'
+import { finishSchema, getSession, liveRoundSchema, participantsUpdatedSchema, roomCodeSchema, sessionStartedSchema, snapshotSchema } from '../api/gameSessions'
+import type { LiveRound, Participant, Session, SessionSnapshot } from '../api/gameSessions'
 import { AppError } from '../api/http'
 import { expireAuth } from '../auth/storage'
 import { useAuth } from '../auth/useAuth'
@@ -12,6 +13,10 @@ export function useSessionLobby(roomCode: string) {
   const [session, setSession] = useState<SessionSnapshot | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [connected, setConnected] = useState(false)
+  const [round, setRound] = useState<LiveRound>()
+  const [finished, setFinished] = useState<z.infer<typeof finishSchema>>()
+  const [pending, setPending] = useState(false)
+  const sendRef = useRef<(event: string, questionId: string, answer?: boolean) => void>(() => {})
   const leaseRef = useRef<symbol | null>(null)
   const lastStartedAt = useRef(0)
   const startedEvent = useRef<{ sessionId: string; startedAt: string } | null>(null)
@@ -33,7 +38,19 @@ export function useSessionLobby(roomCode: string) {
     let receivedSnapshot = false
     let latestParticipants: Participant[] | null = null
 
+    const applyRound = (game: LiveRound) => {
+      setRound((previous) => {
+        if (previous && previous.version > game.version) return previous
+        if (previous?.questionId !== game.questionId) return game
+        return {
+          ...previous, ...game,
+          answered: Boolean(previous.answered || game.answered),
+        }
+      })
+    }
     const accept = (snapshot: SessionSnapshot) => {
+      if (snapshot.game) applyRound(snapshot.game)
+      setPending(false)
       const event = startedEvent.current
       const next = event?.sessionId === roomCode && snapshot.status === 'LOBBY'
         ? { ...snapshot, status: 'IN_PROGRESS' as const, startedAt: event.startedAt }
@@ -73,17 +90,50 @@ export function useSessionLobby(roomCode: string) {
     const onError = (payload: unknown) => {
       if (!active()) return
       const code = payload && typeof payload === 'object' && 'code' in payload ? String(payload.code) : 'INTERNAL_ERROR'
-      setError(new AppError('No se pudo completar la operación en vivo.', undefined, code))
+      const message = payload && typeof payload === 'object' && 'message' in payload ? String(payload.message) : 'No se pudo completar la operación en vivo.'
+      setPending(false)
+      setError(new AppError(message, undefined, code))
       if (code === 'UNAUTHENTICATED') expireAuth()
     }
     const onDisconnect = (reason: string) => {
       if (!active()) return
       setConnected(false)
+      setPending(false)
       if (reason === 'io server disconnect') expireAuth()
     }
     const onConnectError = () => {
       if (active()) { setConnected(false); setError(new AppError('No hay conexión en vivo. Revisa el backend; se intentará reconectar.')) }
     }
+    const onRound = (payload: unknown) => {
+      const result = z.object({ roomCode: roomCodeSchema, game: liveRoundSchema }).safeParse(payload)
+      if (!active() || !result.success || result.data.roomCode !== roomCode) return
+      applyRound(result.data.game)
+      setPending(false)
+      setError(null)
+    }
+    const onAccepted = (payload: unknown) => {
+      const result = z.object({ roomCode: roomCodeSchema, questionId: z.uuid() }).safeParse(payload)
+      if (!active() || !result.success || result.data.roomCode !== roomCode) return
+      setRound((previous) => previous?.questionId === result.data.questionId ? { ...previous, answered: true } : previous)
+      setPending(false)
+    }
+    const onFinished = (payload: unknown) => {
+      const result = finishSchema.safeParse(payload)
+      if (!active() || !result.success || result.data.roomCode !== roomCode) return
+      setFinished(result.data)
+      setPending(false)
+    }
+    sendRef.current = (event, questionId, answer) => {
+      if (!active() || !socket.connected) return
+      setPending(true)
+      setError(null)
+      socket.emit(event, { roomCode, questionId, ...(answer !== undefined && { answer }) })
+    }
+    socket.on('question-opened', onRound)
+    socket.on('question-closed', onRound)
+    socket.on('round-result', onRound)
+    socket.on('answer-accepted', onAccepted)
+    socket.on('game-finished', onFinished)
     socket.on('connect', onConnect)
     socket.on('session-state', onState)
     socket.on('participants-updated', onParticipants)
@@ -102,6 +152,11 @@ export function useSessionLobby(roomCode: string) {
     return () => {
       if (active()) leaseRef.current = null
       controller.abort()
+      socket.off('question-opened', onRound)
+      socket.off('question-closed', onRound)
+      socket.off('round-result', onRound)
+      socket.off('answer-accepted', onAccepted)
+      socket.off('game-finished', onFinished)
       socket.off('connect', onConnect)
       socket.off('session-state', onState)
       socket.off('participants-updated', onParticipants)
@@ -114,5 +169,5 @@ export function useSessionLobby(roomCode: string) {
   }, [roomCode, token])
 
   const invalid = !roomCodeSchema.safeParse(roomCode).success
-  return { session, connected, error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }
+  return { session, connected, round, finished, pending, send: (event: string, questionId: string, answer?: boolean) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }
 }

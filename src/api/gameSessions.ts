@@ -12,7 +12,18 @@ const sessionSchema = z.object({
   quizId: quizIdSchema,
   startedAt: z.string().optional(),
 })
-export const snapshotSchema = sessionSchema.extend({ participants: z.array(participantSchema) })
+export const liveRoundSchema = z.object({
+  questionId: z.uuid(), questionText: z.string(), imageUrl: z.string().nullable(),
+  position: z.number(), total: z.number(), version: z.number(),
+  serverNow: z.number(), closesAt: z.number(), closed: z.boolean(),
+  correctAnswer: z.boolean().optional(), answered: z.boolean().optional(), points: z.number().optional(),
+})
+export const finishSchema = z.object({
+  roomCode: roomCodeSchema, version: z.number(),
+  scores: z.array(z.object({ playerName: z.string(), score: z.number(), rank: z.number() })),
+})
+export type LiveRound = z.infer<typeof liveRoundSchema>
+export const snapshotSchema = sessionSchema.extend({ participants: z.array(participantSchema), game: liveRoundSchema.optional() })
 export const participantsUpdatedSchema = z.object({ participants: z.array(participantSchema) })
 export const sessionStartedSchema = z.object({ sessionId: roomCodeSchema, startedAt: z.string() })
 export type Participant = z.infer<typeof participantSchema>

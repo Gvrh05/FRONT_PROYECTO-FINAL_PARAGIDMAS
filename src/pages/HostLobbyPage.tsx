@@ -4,13 +4,14 @@ import { startSession } from '../api/gameSessions'
 import { AppError } from '../api/http'
 import { useAuth } from '../auth/useAuth'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { LiveRoundPanel, FinalScores } from '../components/LiveRoundPanel'
 import { ParticipantList } from '../components/ParticipantList'
 import { RoomCodeBadge } from '../components/RoomCodeBadge'
 import { useSessionLobby } from '../realtime/useSessionLobby'
 
 export function HostLobbyPage({ roomCode }: { roomCode: string }) {
   const { user } = useAuth()
-  const { session, connected, error, setError, applyStarted, loading } = useSessionLobby(roomCode)
+  const { session, connected, error, setError, applyStarted, loading, round, finished, pending, send } = useSessionLobby(roomCode)
   const [busy, setBusy] = useState(false)
   const alive = useRef(false)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
@@ -39,13 +40,13 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
     {session && <>
       <RoomCodeBadge roomCode={session.roomCode} />
       <p className="connection" role="status">{connected ? 'Conexión en vivo activa' : 'Reconectando…'}</p>
-      <p className="status" data-testid="session-status" role="status">{session.status === 'IN_PROGRESS' ? 'Partida en curso' : session.status === 'FINISHED' ? 'La sala ha finalizado' : 'En lobby'}</p>
+      <p className="status" data-testid="session-status" role="status">{finished || session.status === 'FINISHED' ? 'La sala ha finalizado' : session.status === 'IN_PROGRESS' ? 'Partida en curso' : 'En lobby'}</p>
       <ParticipantList participants={session.participants} hostId={session.hostId} />
       {session.status === 'LOBBY' && <>
         {!hasOtherConnectedPlayer && <p>Espera a que se conecte otro jugador para iniciar.</p>}
         <button type="button" disabled={!canStart} onClick={() => void start()}>{busy ? 'Iniciando…' : 'Iniciar partida'}</button>
       </>}
-      {session.status === 'IN_PROGRESS' && <p>El lobby terminó. Las preguntas y respuestas corresponden al Punto 4.</p>}
+      {finished ? <FinalScores scores={finished.scores} /> : isHost && round && <LiveRoundPanel round={round} connected={connected} host pending={pending} onNext={() => send('next-question', round.questionId)} />}
     </>}
     <Link to="/host/create">Crear otra sala</Link>
   </section>

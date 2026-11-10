@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { apiErrorMessage } from '../api/http'
 import { deleteQuestion, deleteQuiz, getQuiz } from '../api/quizzes'
 import type { QuestionResource, QuizDetail as QuizDetailResource } from '../types'
@@ -166,7 +166,7 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
   if (state.status === 'missing') {
     return (
       <div className="alert" role="alert">
-        <p>El cuestionario no estÃ¡ disponible.</p>
+        <p>El cuestionario no está disponible.</p>
         <p className="muted">
           Puede haber sido eliminado o pertenecer a otra cuenta.
         </p>
@@ -231,7 +231,7 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
       ) : null}
 
       {quiz.questions.length === 0 && !form ? (
-        <p className="empty">Este cuestionario todavÃ­a no tiene preguntas.</p>
+        <p className="empty">Este cuestionario todavía no tiene preguntas.</p>
       ) : null}
 
       <ol className="question-list">
@@ -251,7 +251,8 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
               ))}
             </ul>
             <p className="hint">
-              {question.timeLimitSeconds} s Â· {question.points} puntos
+              {question.timeLimitSeconds} s · {question.kind === 'TRUE_FALSE' ? 1 : question.points}{' '}
+              {question.kind === 'TRUE_FALSE' || question.points === 1 ? 'punto' : 'puntos'}
             </p>
             <QuestionImage
               quizId={quizId}
@@ -283,7 +284,7 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
       <ConfirmDialog
         open={Boolean(deleteQuestionTarget)}
         title="Eliminar pregunta"
-        message="Se eliminarÃ¡n la pregunta, sus cuatro opciones y su imagen. Esta acciÃ³n no se puede deshacer."
+        message="Se eliminarán la pregunta, sus opciones y su imagen. Esta acción no se puede deshacer."
         pending={deletingQuestion}
         onConfirm={confirmQuestionDelete}
         onCancel={() => setDeleteQuestionTarget(null)}
@@ -292,7 +293,7 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
       <ConfirmDialog
         open={askingQuizDelete}
         title="Eliminar cuestionario"
-        message={`Se eliminarÃ¡n Â«${quiz.title}Â», todas sus preguntas e imÃ¡genes. Esta acciÃ³n no se puede deshacer.`}
+        message={`Se eliminarán «${quiz.title}», todas sus preguntas e imágenes. Esta acción no se puede deshacer.`}
         pending={deletingQuiz}
         onConfirm={confirmQuizDelete}
         onCancel={() => setAskingQuizDelete(false)}

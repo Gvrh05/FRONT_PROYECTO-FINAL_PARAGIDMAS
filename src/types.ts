@@ -26,7 +26,10 @@ export interface QuestionOptionResource {
   isCorrect: boolean
 }
 
+export type QuestionKind = 'MULTIPLE_CHOICE' | 'TRUE_FALSE'
+
 export interface QuestionResource {
+  kind?: QuestionKind
   id: string
   quizId: string
   questionText: string
@@ -52,6 +55,7 @@ export interface QuestionOptionInput {
 }
 
 export interface QuestionInput {
+  kind?: QuestionKind
   questionText: string
   timeLimitSeconds?: number
   points?: number

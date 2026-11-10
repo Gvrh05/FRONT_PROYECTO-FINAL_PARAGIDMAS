@@ -25,8 +25,8 @@ export function errorMessage(error: unknown): string {
     INVALID_ROOM_CODE: 'El código de sala debe tener exactamente 6 dígitos.',
     SESSION_NOT_FOUND: 'La sala no existe o su servidor se reinició. Comprueba el código.',
     SESSION_ALREADY_STARTED: 'La sala ya inició; solo sus participantes pueden reconectar.',
-    INVALID_SESSION_STATUS: 'La sala ya no está en lobby.',
-    FORBIDDEN: 'Solo el anfitrión puede iniciar esta partida.',
+    INVALID_SESSION_STATUS: error instanceof AppError ? error.message : 'La sala cambió de estado.',
+    FORBIDDEN: error instanceof AppError ? error.message : 'No tienes permiso para esta operación.',
   }
   if (code && wsMessages[code]) return wsMessages[code]
   if (axios.isAxiosError(error)) {
