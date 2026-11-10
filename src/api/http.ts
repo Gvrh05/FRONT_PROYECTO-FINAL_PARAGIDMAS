@@ -2,6 +2,10 @@ import axios from 'axios'
 import { ZodError } from 'zod'
 import { expireAuth } from '../auth/storage'
 
+// Preserve existing imports without routing authoring/Auth through the singleton.
+export { createHttp } from './createHttp'
+export type { HttpOptions } from './createHttp'
+
 export class AppError extends Error {
   readonly statusCode?: number
   readonly code?: string
@@ -66,3 +70,29 @@ http.interceptors.response.use((response) => response, (error: unknown) => {
   }
   return Promise.reject(new AppError('La respuesta del servidor no es válida. Intenta de nuevo.'))
 })
+
+export function apiErrorMessage(error: unknown): string {
+  if (!axios.isAxiosError(error)) {
+    return error instanceof Error ? error.message : 'Ocurrió un error inesperado.'
+  }
+  if (axios.isCancel(error)) return ''
+  if (!error.response) {
+    return 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
+  }
+  if (error.response.status === 401) return 'Tu sesión no es válida o expiró.'
+  if (error.response.status === 413) return 'La imagen supera el tamaño máximo permitido.'
+  if (error.response.status === 415) return 'El archivo no es una imagen JPEG, PNG o WebP válida.'
+  if (error.response.status === 404) return 'El recurso ya no está disponible.'
+  const data = error.response.data as { error?: unknown } | undefined
+  const detail = data?.error
+  if (typeof detail === 'string' && detail.trim()) return detail
+  if (detail && typeof detail === 'object' && 'message' in detail) {
+    const message = (detail as { message?: unknown }).message
+    if (typeof message === 'string' && message.trim()) return message
+    if (Array.isArray(message)) {
+      const joined = message.filter((item): item is string => typeof item === 'string')
+      if (joined.length) return joined.join(' ')
+    }
+  }
+  return `La solicitud falló (${error.response.status}).`
+}
