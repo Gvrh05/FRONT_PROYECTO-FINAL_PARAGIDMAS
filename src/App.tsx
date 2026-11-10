@@ -1,90 +1,148 @@
-import { useState } from 'react'
-import './App.css'
-import { LoginForm } from './components/LoginForm'
-import { QuizDetail } from './components/QuizDetail'
-import { QuizForm } from './components/QuizForm'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { Link, Navigate, Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom'
+import { ProtectedRoute } from './auth/ProtectedRoute'
+import { useAuth } from './auth/useAuth'
+import { HostCreateSessionPage } from './pages/HostCreateSessionPage'
+import { HostLobbyPage } from './pages/HostLobbyPage'
+import { JoinSessionPage } from './pages/JoinSessionPage'
+import { PlayerLobbyPage } from './pages/PlayerLobbyPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { QuizList } from './components/QuizList'
+import { QuizForm } from './components/QuizForm'
+import { QuizDetail } from './components/QuizDetail'
 import { CreateGamePanel } from './components/CreateGamePanel'
 import { ResultsPanel } from './components/ResultsPanel'
+import { LoginForm } from './components/LoginForm'
 import { SessionProvider, useSession } from './session/session'
+import { getQuiz } from './api/quizzes'
+import { apiErrorMessage } from './api/http'
 import type { QuizSummary } from './types'
 
-type View =
-  | { name: 'list' }
-  | { name: 'detail'; quizId: string }
-  | { name: 'create' }
-  | { name: 'edit'; quiz: QuizSummary }
+// Production builds remove the dev route, dynamic import and public demo signing key.
+const DevLoginButtons = import.meta.env.DEV ? lazy(() => import('./auth/DevLoginButtons')) : null
 
-type Section = 'quizzes' | 'create-game' | 'results'
-
-function Workspace() {
-  const { session, logout } = useSession()
-  const [view, setView] = useState<View>({ name: 'list' })
-  const [section, setSection] = useState<Section>('quizzes')
-  if (!session) return null
-
-  function navigate(next: Section) {
-    setSection(next)
-    if (next === 'quizzes') setView({ name: 'list' })
+function LoginPage() {
+  if (!import.meta.env.DEV) {
+    return <SessionProvider><ProductionLogin /></SessionProvider>
   }
-
-  return (
-    <div className="dashboard-shell">
-      <aside className="sidebar" aria-label="Navegación principal">
-        <a className="brand" href="#inicio" onClick={(event) => { event.preventDefault(); navigate('quizzes') }}>
-          <span className="brand-mark">P</span><span>Profelink<span className="brand-light">Kahoot</span></span>
-        </a>
-        <p className="sidebar-label">Espacio de trabajo</p>
-        <nav className="sidebar-nav">
-          <button className={section === 'quizzes' ? 'active' : ''} onClick={() => navigate('quizzes')}><span>▦</span> Quices</button>
-          <button className={section === 'create-game' ? 'active' : ''} onClick={() => navigate('create-game')}><span>▶</span> Crear partida</button>
-          <button className={section === 'results' ? 'active' : ''} onClick={() => navigate('results')}><span>▤</span> Resultados</button>
-        </nav>
-        <div className="sidebar-account">
-          <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
-          <div className="account-copy"><strong>{session.user.username}</strong><small>Docente</small></div>
-          <button className="logout-button" aria-label="Cerrar sesión" onClick={() => logout()}>↗</button>
-        </div>
-      </aside>
-      <main className="dashboard-main">
-        <header className="dashboard-topbar"><span>Panel de control</span><span className="online-indicator">Sesión activa</span></header>
-        <div className="dashboard-content">
-          {section === 'quizzes' ? (
-            <>
-              {view.name === 'list' ? <QuizList onCreate={() => setView({ name: 'create' })} onOpen={(quizId) => setView({ name: 'detail', quizId })} onEdit={(quiz) => setView({ name: 'edit', quiz })} /> : null}
-              {view.name === 'create' ? <QuizForm onCancel={() => setView({ name: 'list' })} onSaved={(quiz) => setView({ name: 'detail', quizId: quiz.id })} /> : null}
-              {view.name === 'edit' ? <QuizForm quiz={view.quiz} onCancel={() => setView({ name: 'detail', quizId: view.quiz.id })} onSaved={(quiz) => setView({ name: 'detail', quizId: quiz.id })} /> : null}
-              {view.name === 'detail' ? <QuizDetail quizId={view.quizId} onBack={() => setView({ name: 'list' })} onEdit={(quiz) => setView({ name: 'edit', quiz })} /> : null}
-            </>
-          ) : null}
-          {section === 'create-game' ? <CreateGamePanel /> : null}
-          {section === 'results' ? <ResultsPanel /> : null}
-        </div>
-      </main>
-    </div>
-  )
+  return <section className="card">
+    <p className="eyebrow">Acceso</p>
+    <h1>Integración con Auth Service pendiente</h1>
+    {DevLoginButtons
+      ? <Suspense fallback={<p>Cargando acceso de demo…</p>}><DevLoginButtons /></Suspense>
+      : <p>Solicita un token al Auth Service. El acceso de demo solo está disponible con pnpm dev.</p>}
+  </section>
 }
 
-function AuthoringApp() {
+function ProductionLogin() {
   const { session } = useSession()
-  const [showLogin, setShowLogin] = useState(false)
-  if (session) return <Workspace key={session.generation} />
-  if (showLogin) return <div className="auth-page"><button className="back-link" onClick={() => setShowLogin(false)}>← Volver</button><LoginForm /></div>
-  return (
-    <main className="landing">
-      <nav className="landing-nav"><a className="brand landing-brand" href="#home"><span className="brand-mark">P</span><span>Profelink<span className="brand-light">Kahoot</span></span></a><button className="button-quiet" onClick={() => setShowLogin(true)}>Iniciar sesión</button></nav>
-      <section className="landing-hero">
-        <div className="hero-copy"><span className="hero-kicker"><i /> APRENDER JUGANDO</span><h1>Convierte cada clase en una experiencia <em>inolvidable.</em></h1><p>Crea quices, invita a tu clase y descubre cuánto saben. Todo en un espacio sencillo y hecho para enseñar.</p><button className="hero-cta" onClick={() => setShowLogin(true)}>Entrar a mi espacio <span>→</span></button><small>Tu aula, tus reglas, más participación.</small></div>
-        <div className="hero-art" aria-hidden="true"><div className="art-card art-card-back"><span>¿Cuál es la respuesta?</span><div className="art-answer purple">A</div><div className="art-answer coral">B</div><div className="art-answer yellow">C</div><div className="art-answer mint">D</div></div><div className="art-card art-card-front"><span className="art-live"><i /> EN VIVO</span><strong>¡La clase está lista!</strong><div className="art-people"><span>✦</span><span>●</span><span>◆</span><span>+18</span></div><small>23 estudiantes conectados</small></div><span className="art-spark spark-one">✳</span><span className="art-spark spark-two">✦</span></div>
-      </section>
-      <section className="landing-benefits"><div><span>01</span><strong>Diseña tus quices</strong><small>Preguntas claras, en segundos.</small></div><div><span>02</span><strong>Juega en equipo</strong><small>Una sala, toda la clase.</small></div><div><span>03</span><strong>Ve el progreso</strong><small>Resultados para seguir creciendo.</small></div></section>
-      <footer className="landing-footer">PROFELINK KAHOOT <span>ENSEÑAR TAMBIÉN PUEDE SER UN JUEGO.</span></footer>
-    </main>
-  )
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (session) navigate('/dashboard', { replace: true })
+  }, [session, navigate])
+  return <div className="auth-page"><LoginForm /></div>
 }
 
-function App() {
-  return <SessionProvider><AuthoringApp /></SessionProvider>
+function Layout() {
+  const { token, user, logout } = useAuth()
+  return <>
+    <header className="site-header"><Link className="brand" to="/">Quiz en vivo <span>Punto 3</span></Link>
+      <nav aria-label="Principal">
+        {token ? <><Link to="/dashboard">Dashboard</Link><Link to="/quizzes">Quizzes</Link><Link to="/host/create">Crear sala</Link><Link to="/join">Unirse</Link><button className="secondary" onClick={() => {
+          logout()
+          window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: localStorage }))
+        }}>Salir</button></> : <Link to="/login">Acceder</Link>}
+      </nav>
+    </header>
+    <main className="container">{user && <p className="identity">{user.name || user.sub}</p>}<Outlet /></main>
+    <footer>Verdadero / Falso · EIF400 · Sala de juego</footer>
+  </>
 }
 
-export default App
+function HostLobbyRoute() {
+  const { roomCode = '' } = useParams()
+  const { user } = useAuth()
+  return <HostLobbyPage key={`${roomCode}:${user?.sub}`} roomCode={roomCode} />
+}
+
+function PlayerLobbyRoute() {
+  const { roomCode = '' } = useParams()
+  const { user } = useAuth()
+  return <PlayerLobbyPage key={`${roomCode}:${user?.sub}`} roomCode={roomCode} />
+}
+
+function QuizListPage() {
+  const navigate = useNavigate()
+  return <SessionProvider><QuizList
+    onCreate={() => navigate('/quizzes/new')}
+    onOpen={(quizId) => navigate(`/quizzes/${quizId}`)}
+    onEdit={(quiz) => navigate(`/quizzes/${quiz.id}/edit`)}
+  /></SessionProvider>
+}
+
+function QuizFormPage() {
+  const { quizId } = useParams()
+  return <SessionProvider><QuizFormRoute key={quizId ?? 'new'} quizId={quizId} /></SessionProvider>
+}
+
+function QuizFormRoute({ quizId }: { quizId?: string }) {
+  const navigate = useNavigate()
+  const { api, session, isCurrent } = useSession()
+  const [loaded, setLoaded] = useState<{ quiz?: QuizSummary; error?: string; generation: number } | null>(null)
+  useEffect(() => {
+    if (!quizId || !api || !session) return
+    const generation = session.generation
+    const controller = new AbortController()
+    void getQuiz(api, quizId, controller.signal).then((quiz) => {
+      if (!controller.signal.aborted && isCurrent(generation)) setLoaded({ quiz, generation })
+    }, (error: unknown) => {
+      if (!controller.signal.aborted && isCurrent(generation)) setLoaded({ error: apiErrorMessage(error), generation })
+    })
+    return () => controller.abort()
+  }, [quizId, api, session, isCurrent])
+  if (quizId && (!loaded || loaded.generation !== session?.generation)) return <p role="status">Cargando cuestionario…</p>
+  if (quizId && loaded?.error) return <section className="card"><p role="alert">{loaded.error}</p><Link to="/quizzes">Volver al listado</Link></section>
+  return <QuizForm key={`${quizId ?? 'new'}:${session?.generation}`} quiz={quizId ? loaded?.quiz : undefined}
+    onCancel={() => navigate('/quizzes')}
+    onSaved={(quiz) => navigate(`/quizzes/${quiz.id}`)}
+  />
+}
+
+function QuizDetailPage() {
+  const { quizId = '' } = useParams()
+  const navigate = useNavigate()
+  return <SessionProvider><QuizDetail key={quizId} quizId={quizId}
+    onBack={() => navigate('/quizzes')}
+    onEdit={(quiz) => navigate(`/quizzes/${quiz.id}/edit`)}
+  /></SessionProvider>
+}
+
+function CreateGamePanelPage() {
+  return <SessionProvider><CreateGamePanel /></SessionProvider>
+}
+
+function ResultsPanelPage() {
+  return <SessionProvider><ResultsPanel /></SessionProvider>
+}
+
+export default function App() {
+  return <Routes><Route element={<Layout />}>
+    <Route index element={<Navigate to="/dashboard" replace />} />
+    <Route path="login" element={<LoginPage />} />
+    {import.meta.env.DEV && <Route path="dev-login" element={<LoginPage />} />}
+    <Route element={<ProtectedRoute />}>
+      <Route path="host/create" element={<HostCreateSessionPage />} />
+      <Route path="host/lobby/:roomCode" element={<HostLobbyRoute />} />
+      <Route path="join" element={<JoinSessionPage />} />
+      <Route path="play/lobby/:roomCode" element={<PlayerLobbyRoute />} />
+      <Route path="dashboard" element={<DashboardPage />} />
+      <Route path="quizzes" element={<QuizListPage />} />
+      <Route path="quizzes/new" element={<QuizFormPage />} />
+      <Route path="quizzes/:quizId" element={<QuizDetailPage />} />
+      <Route path="quizzes/:quizId/edit" element={<QuizFormPage />} />
+      <Route path="create-game" element={<CreateGamePanelPage />} />
+      <Route path="results" element={<ResultsPanelPage />} />
+    </Route>
+    <Route path="*" element={<section className="card"><h1>Página no encontrada</h1><Link to="/">Volver al inicio</Link></section>} />
+  </Route></Routes>
+}

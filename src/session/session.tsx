@@ -3,13 +3,16 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
 import { API_ORIGIN, API_URL, AUTH_API_URL } from '../api/config'
-import { apiErrorMessage, createHttp } from '../api/http'
+import { apiErrorMessage } from '../api/http'
+import { createHttp } from '../api/createHttp'
+import { AUTH_EXPIRED_EVENT } from '../auth/storage'
 import type { AuthUser, LoginResponse } from '../types'
 
 export interface Session {
@@ -34,6 +37,30 @@ interface SessionContextValue {
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null)
+
+// Both authoring's {id, username} and Punto 3's {sub, name} are display data;
+// authentication/ownership always remain the backend's responsibility.
+function readPersistedSession(): LoginResponse | null {
+  try {
+    const accessToken = localStorage.getItem('token')
+    const value: unknown = JSON.parse(localStorage.getItem('user') ?? 'null')
+    if (!accessToken || !value || typeof value !== 'object') return null
+    const user = value as Record<string, unknown>
+    const id = typeof user.id === 'string' ? user.id : user.sub
+    if (typeof id !== 'string' || !id.trim()) return null
+    return { accessToken, user: {
+      id,
+      username: typeof user.username === 'string' ? user.username : typeof user.name === 'string' ? user.name : id,
+      role: typeof user.role === 'string' ? user.role : '',
+    } }
+  } catch { return null }
+}
+
+// Native storage events only reach other tabs. Notify existing AuthContext and
+// other mounted providers in this tab too, without changing either public API.
+function notifyStoredSession() {
+  window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: localStorage }))
+}
 
 function parseLogin(data: unknown): LoginResponse {
   if (!data || typeof data !== 'object') {
@@ -67,9 +94,12 @@ function parseLogin(data: unknown): LoginResponse {
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<Session | null>(() => {
+    const persisted = readPersistedSession()
+    return persisted ? { ...persisted, generation: 0 } : null
+  })
   const [notice, setNotice] = useState<string | null>(null)
-  const sessionRef = useRef<Session | null>(null)
+  const sessionRef = useRef<Session | null>(session)
   const counter = useRef(0)
   const loginAttempt = useRef(0)
 
@@ -89,6 +119,36 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setSession(null)
     setNotice(message ?? null)
     counter.current += 1
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    notifyStoredSession()
+  }, [])
+
+  useEffect(() => {
+    const sync = () => {
+      const persisted = readPersistedSession()
+      const current = sessionRef.current
+      if (!persisted && !current) return
+      if (persisted && current && persisted.accessToken === current.accessToken &&
+        persisted.user.id === current.user.id && persisted.user.username === current.user.username &&
+        persisted.user.role === current.user.role) return
+      loginAttempt.current += 1
+      counter.current += 1
+      const next = persisted ? { ...persisted, generation: counter.current } : null
+      sessionRef.current = next
+      setSession(next)
+    }
+    const storage = (event: StorageEvent) => {
+      if ((!event.storageArea || event.storageArea === localStorage) &&
+        (event.key === null || event.key === 'token' || event.key === 'user')) sync()
+    }
+    sync()
+    window.addEventListener('storage', storage)
+    window.addEventListener(AUTH_EXPIRED_EVENT, sync)
+    return () => {
+      window.removeEventListener('storage', storage)
+      window.removeEventListener(AUTH_EXPIRED_EVENT, sync)
+    }
   }, [])
 
   const isCurrent = useCallback(
@@ -111,6 +171,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         sessionRef.current = next
         setSession(next)
         setNotice(null)
+        localStorage.setItem('token', next.accessToken)
+        localStorage.setItem('user', JSON.stringify({ ...next.user, sub: next.user.id, name: next.user.username }))
+        notifyStoredSession()
       } catch (error) {
         if (attempt !== loginAttempt.current) return
         if (axios.isAxiosError(error) && error.response?.status === 401) {
