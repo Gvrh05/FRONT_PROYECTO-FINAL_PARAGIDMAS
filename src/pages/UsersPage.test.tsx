@@ -10,8 +10,8 @@ import { SessionProvider } from '../session/session'
 afterEach(() => vi.restoreAllMocks())
 
 function renderUsers(role: string) {
-  localStorage.setItem('token', 'master-token')
-  localStorage.setItem('user', JSON.stringify({ id: 'master', username: 'admin', role }))
+  sessionStorage.setItem('token', 'master-token')
+  sessionStorage.setItem('user', JSON.stringify({ id: 'master', username: 'admin', role }))
   return render(<MemoryRouter initialEntries={['/users']}><SessionProvider><Routes><Route path="users" element={<UsersPage />} /><Route path="dashboard" element={<p>Dashboard protegido</p>} /></Routes></SessionProvider></MemoryRouter>)
 }
 
@@ -45,6 +45,6 @@ it('MASTER crea profesor sin sustituir token y el sistema no se puede desactivar
   await user.click(screen.getByRole('button', { name: 'Guardar' }))
   await screen.findByText('Cambios guardados.')
   expect(JSON.parse(requests[0])).toEqual({ username: 'docente', password: 'secure-password' })
-  expect(localStorage.getItem('token')).toBe('master-token')
-  expect(JSON.parse(localStorage.getItem('user')!).role).toBe('MASTER')
+  expect(sessionStorage.getItem('token')).toBe('master-token')
+  expect(JSON.parse(sessionStorage.getItem('user')!).role).toBe('MASTER')
 })

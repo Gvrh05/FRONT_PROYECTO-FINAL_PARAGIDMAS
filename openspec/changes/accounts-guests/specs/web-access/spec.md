@@ -25,6 +25,13 @@ Una cuenta SHALL ser necesaria para autoría y administración, pero SHALL NOT s
 - WHEN el anfitrión inicia un quiz propio TRUE_FALSE
 - THEN el invitado recibe la ronda segura y envía submit-answer con boolean; no recibe respuesta correcta antes del cierre.
 
+### Requirement: Registro y entrada autenticada por PIN
+La web SHALL permitir registrar un perfil desde la pantalla de acceso e ingresar a una sala por su PIN de seis dígitos con una sesión autenticada.
+
+#### Scenario: Entrar con un perfil diferente al anfitrión
+- WHEN el jugador inicia sesión y envía el PIN de una sala en lobby
+- THEN la web registra su participación y se suscribe por WebSocket con su propio token.
+
 ### Requirement: Cambio de sesión
 La web SHALL descartar respuestas y eventos de la cuenta anterior al cerrar sesión y desconectar su socket.
 

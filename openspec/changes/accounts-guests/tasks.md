@@ -7,4 +7,5 @@
 - [x] Enlace y QR local, origen público validado, defaults mismo origen.
 - [x] Ejecutar build, lint y suite; corregir regresiones.
 - [x] Verificación integrada Auth/API/WS y navegador Edge anónimo con viewport móvil.
+- [x] Registro de perfil en la web y entrada por PIN con sesión autenticada. Probar que la entrada no usa la lectura privada del anfitrión.
 - [ ] Verificación física con teléfono en la red del aula (requiere dispositivo/red del usuario).
