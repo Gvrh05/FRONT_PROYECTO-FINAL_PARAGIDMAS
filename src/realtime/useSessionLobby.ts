@@ -32,7 +32,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string) {
     if (!token || !roomCodeSchema.safeParse(roomCode).success) return
     const key = Symbol(roomCode)
     leaseRef.current = key
-    const active = () => leaseRef.current === key && (Boolean(guestToken) || localStorage.getItem('token') === token)
+    const active = () => leaseRef.current === key && (Boolean(guestToken) || sessionStorage.getItem('token') === token)
     const controller = new AbortController()
     const lease = leaseGameSocket(token, roomCode, Boolean(guestToken))
     const socket = lease.socket
