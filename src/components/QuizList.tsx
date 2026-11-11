@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiErrorMessage } from '../api/http'
-import { deleteQuiz, listQuizzes } from '../api/quizzes'
+import { createPokemonQuiz, deleteQuiz, listQuizzes } from '../api/quizzes'
 import type { QuizSummary } from '../types'
 import { useSession } from '../session/session'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -23,6 +23,25 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
   const [deleteTarget, setDeleteTarget] = useState<QuizSummary | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [generatingPokemon, setGeneratingPokemon] = useState(false)
+
+  async function generatePokemon() {
+    if (!api || !session || generatingPokemon) return
+    setGeneratingPokemon(true)
+    setActionError(null)
+    const generation = session.generation
+    try {
+      const quiz = await createPokemonQuiz(api)
+      if (!isCurrent(generation)) return
+      setState((current) => current.status === 'ready'
+        ? { status: 'ready', quizzes: [quiz, ...current.quizzes] }
+        : current)
+    } catch (error) {
+      if (isCurrent(generation)) setActionError(apiErrorMessage(error))
+    } finally {
+      setGeneratingPokemon(false)
+    }
+  }
 
   useEffect(() => {
     if (!api || !session) return
@@ -81,6 +100,9 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
       <h2 id="quiz-list-title">Todos los cuestionarios</h2>
         <button type="button" onClick={onCreate}>
           Nuevo cuestionario
+        </button>
+        <button type="button" onClick={generatePokemon} disabled={generatingPokemon}>
+          {generatingPokemon ? 'Generando Pokémon…' : 'Generar quiz Pokémon'}
         </button>
       </div>
 
