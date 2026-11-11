@@ -21,10 +21,7 @@ import type { QuizSummary } from './types'
 // Production builds remove the dev route, dynamic import and public demo signing key.
 const DevLoginButtons = import.meta.env.DEV ? lazy(() => import('./auth/DevLoginButtons')) : null
 
-function LoginPage() {
-  if (!import.meta.env.DEV) {
-    return <SessionProvider><ProductionLogin /></SessionProvider>
-  }
+function DevLoginPage() {
   return <section className="card">
     <p className="eyebrow">Acceso</p>
     <h1>Integración con Auth Service pendiente</h1>
@@ -34,13 +31,11 @@ function LoginPage() {
   </section>
 }
 
-function ProductionLogin() {
-  const { session } = useSession()
+function LoginPage() {
   const navigate = useNavigate()
-  useEffect(() => {
-    if (session) navigate('/dashboard', { replace: true })
-  }, [session, navigate])
-  return <div className="auth-page"><LoginForm /></div>
+  return <SessionProvider><div className="auth-page">
+    <LoginForm onSuccess={() => navigate('/dashboard', { replace: true })} />
+  </div></SessionProvider>
 }
 
 function Layout() {
@@ -129,7 +124,7 @@ export default function App() {
   return <Routes><Route element={<Layout />}>
     <Route index element={<Navigate to="/dashboard" replace />} />
     <Route path="login" element={<LoginPage />} />
-    {import.meta.env.DEV && <Route path="dev-login" element={<LoginPage />} />}
+    {import.meta.env.DEV && <Route path="dev-login" element={<DevLoginPage />} />}
     <Route element={<ProtectedRoute />}>
       <Route path="host/create" element={<HostCreateSessionPage />} />
       <Route path="host/lobby/:roomCode" element={<HostLobbyRoute />} />

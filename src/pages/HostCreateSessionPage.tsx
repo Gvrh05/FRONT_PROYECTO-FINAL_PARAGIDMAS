@@ -39,12 +39,10 @@ export function HostCreateSessionPage() {
   }
   return <section className="card">
     <p className="eyebrow">Anfitrión · 1 de 2</p><h1>Crea tu sala</h1>
-    <p>Elige uno de tus cuestionarios y comparte el código con tus jugadores.</p>
+    <p>Elige un cuestionario que tenga solo preguntas Verdadero/Falso y comparte el código con tus jugadores.</p>
     <ErrorBanner error={error} />
     {loading ? <p role="status">Cargando tus cuestionarios…</p> : quizzes.length === 0
-      ? <p className="empty-state">{import.meta.env.DEV
-        ? <>No hay quizzes. Ejecuta <code>pnpm seed</code> en el backend con ownerId=test-host-id.</>
-        : <>No hay cuestionarios disponibles. Contacta al administrador.</>}</p>
+      ? !error && <p className="empty-state">Aún no tienes cuestionarios. Crea uno con preguntas de Verdadero/Falso para iniciar una partida.</p>
       : <form onSubmit={(event) => void submit(event)}>
         <label htmlFor="quiz">Tu cuestionario</label>
         <select id="quiz" value={selected} disabled={busy} onChange={(event) => setSelected(event.target.value)}>

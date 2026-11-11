@@ -1,5 +1,5 @@
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '../../api/config'
-import type { QuestionInput, QuestionResource, QuizInput, QuizSummary } from '../../types'
+import type { QuestionInput, QuestionKind, QuestionResource, QuizInput, QuizSummary } from '../../types'
 
 export const QUIZ_TITLE_MAX = 150
 export const QUIZ_DESCRIPTION_MAX = 2000
@@ -44,7 +44,8 @@ export function buildQuizPatch(draft: QuizDraft, current: QuizSummary): Partial<
 
 export interface QuestionDraft {
   questionText: string
-  options: [string, string, string, string]
+  kind?: QuestionKind
+  options: string[]
   correctIndex: number | null
   timeLimitSeconds: string
   points: string
@@ -65,12 +66,8 @@ export function questionDraftFrom(question: QuestionResource): QuestionDraft {
   const correctIndex = options.findIndex((option) => option.isCorrect)
   return {
     questionText: question.questionText,
-    options: [0, 1, 2, 3].map((index) => options[index]?.text ?? '') as [
-      string,
-      string,
-      string,
-      string,
-    ],
+    kind: question.kind,
+    options: options.map((option) => option.text),
     correctIndex: correctIndex >= 0 ? correctIndex : null,
     timeLimitSeconds: String(question.timeLimitSeconds),
     points: String(question.points),
@@ -100,10 +97,10 @@ export function validateQuestionDraft(draft: QuestionDraft): FieldErrors {
     errors.correct = 'Selecciona la respuesta correcta.'
   } else if (
     draft.correctIndex < 0 ||
-    draft.correctIndex > 3 ||
+    draft.correctIndex >= draft.options.length ||
     !draft.options[draft.correctIndex]?.trim()
   ) {
-    errors.correct = 'La respuesta correcta debe ser una de las cuatro opciones completas.'
+    errors.correct = 'La respuesta correcta debe ser una de las opciones completas.'
   }
 
   const time = parseInteger(draft.timeLimitSeconds)
@@ -118,7 +115,7 @@ export function validateQuestionDraft(draft: QuestionDraft): FieldErrors {
 }
 
 /**
- * Options always travel as a full set of four. On create, time/points keep
+ * Options travel as a complete set for the selected kind. On create, time/points keep
  * server defaults unless changed; on edit they are omitted when unchanged.
  */
 export function buildQuestionInput(
@@ -131,6 +128,7 @@ export function buildQuestionInput(
   }))
 
   const input: QuestionInput = {
+    ...(draft.kind && { kind: draft.kind }),
     questionText: draft.questionText.trim(),
     options,
   }

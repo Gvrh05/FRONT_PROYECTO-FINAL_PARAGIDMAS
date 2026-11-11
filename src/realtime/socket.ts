@@ -1,5 +1,6 @@
 import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
+import { API_ORIGIN } from '../api/config'
 
 let singleton: Socket | undefined
 let version = 0
@@ -8,7 +9,7 @@ let currentRoom: string | null = null
 
 /** One lobby owns a lease. Deferred release coalesces StrictMode's test unmount. */
 export function leaseGameSocket(token: string, roomCode: string) {
-  const url = (import.meta.env.VITE_WS_URL || 'http://localhost:3000').replace(/\/+$/, '').replace(/\/game$/, '')
+  const url = (import.meta.env.VITE_WS_URL || API_ORIGIN).replace(/\/+$/, '').replace(/\/game$/, '')
   singleton ??= io(`${url}/game`, { autoConnect: false, reconnection: true })
   if (currentToken !== token || currentRoom !== roomCode) singleton.disconnect()
   currentToken = token
