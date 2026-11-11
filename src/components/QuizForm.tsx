@@ -39,7 +39,7 @@ export function QuizForm({ quiz, onSaved, onCancel }: QuizFormProps) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (pendingRef.current || !api || !session) return
+    if (quiz?.isDemo || pendingRef.current || !api || !session) return
 
     const nextErrors = validateQuizDraft(draft)
     setErrors(nextErrors)
@@ -84,6 +84,7 @@ export function QuizForm({ quiz, onSaved, onCancel }: QuizFormProps) {
     return updateQuiz(api, current.id, patch)
   }
 
+  if (quiz?.isDemo) return <section className="card"><p>El cuestionario demo es de solo lectura.</p><button onClick={onCancel}>Volver</button></section>
   return (
     <section className="card" aria-labelledby="quiz-form-title">
       <h2 id="quiz-form-title">

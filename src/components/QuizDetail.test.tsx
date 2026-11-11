@@ -17,7 +17,7 @@ describe('eliminación con confirmación', () => {
     vi.mocked(useSession).mockReturnValue({
       api,
       images: api,
-      session: { accessToken: 'token', generation: 1, user: { id: 'u1', username: 'teacher', role: 'teacher' } },
+      session: { accessToken: 'token', generation: 1, user: { id: 'u1', username: 'teacher', role: 'PROFESOR' } },
       isCurrent: () => true,
       notice: null,
       clearNotice: vi.fn(),

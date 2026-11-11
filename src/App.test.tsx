@@ -25,7 +25,7 @@ describe('flujo principal de autoría', () => {
       if (baseURL === 'http://localhost:3001/auth') {
         mock.onPost('/login').reply(200, {
           accessToken: 'test-token',
-          user: { id: 'teacher-1', username: 'docente', role: 'teacher' },
+          user: { id: 'teacher-1', username: 'docente', role: 'PROFESOR' },
         })
       }
       if (baseURL === 'http://localhost:3000/kahoot-api') {
@@ -83,7 +83,7 @@ describe('flujo principal de autoría', () => {
       if (config?.baseURL === 'http://localhost:3001/auth') {
         mock.onPost('/login').reply(200, {
           accessToken: 'retry-token',
-          user: { id: 'teacher-1', username: 'docente', role: 'teacher' },
+          user: { id: 'teacher-1', username: 'docente', role: 'PROFESOR' },
         })
       }
       if (config?.baseURL === 'http://localhost:3000/kahoot-api') {
@@ -124,7 +124,7 @@ describe('flujo principal de autoría', () => {
           loginCount += 1
           return [200, {
             accessToken: `session-${loginCount}`,
-            user: { id: `teacher-${loginCount}`, username: `docente${loginCount}`, role: 'teacher' },
+            user: { id: `teacher-${loginCount}`, username: `docente${loginCount}`, role: 'PROFESOR' },
           }]
         })
       }

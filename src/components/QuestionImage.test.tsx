@@ -34,7 +34,7 @@ describe('imagen privada de pregunta', () => {
     vi.mocked(useSession).mockReturnValue({
       api,
       images,
-      session: { accessToken: 'private-token', generation: 1, user: { id: 'u1', username: 'teacher', role: 'teacher' } },
+      session: { accessToken: 'private-token', generation: 1, user: { id: 'u1', username: 'teacher', role: 'PROFESOR' } },
       isCurrent: () => true,
       notice: null,
       clearNotice: vi.fn(),
@@ -96,7 +96,7 @@ describe('imagen privada de pregunta', () => {
     vi.mocked(useSession).mockReturnValue({
       api: null,
       images,
-      session: { accessToken: 'old-token', generation: 8, user: { id: 'u1', username: 'teacher', role: 'teacher' } },
+      session: { accessToken: 'old-token', generation: 8, user: { id: 'u1', username: 'teacher', role: 'PROFESOR' } },
       isCurrent: () => current,
       notice: null,
       clearNotice: vi.fn(),

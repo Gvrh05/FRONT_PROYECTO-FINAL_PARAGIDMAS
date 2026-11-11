@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Link, Navigate, Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { GuestJoinPage } from './pages/GuestJoinPage'
+import { UsersPage } from './pages/UsersPage'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { useAuth } from './auth/useAuth'
 import { HostCreateSessionPage } from './pages/HostCreateSessionPage'
@@ -40,13 +42,17 @@ function LoginPage() {
 
 function Layout() {
   const { token, user, logout } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
   return <>
     <header className="site-header"><Link className="brand" to="/">Quiz en vivo <span>Punto 3</span></Link>
       <nav aria-label="Principal">
         {token ? <><Link to="/dashboard">Dashboard</Link><Link to="/quizzes">Quizzes</Link><Link to="/host/create">Crear sala</Link><Link to="/join">Unirse</Link><button className="secondary" onClick={() => {
+          if (location.pathname.startsWith('/host/lobby/') && !window.confirm('Cerrar sesión interrumpe temporalmente tu control de la sala, sin terminarla. Puedes volver a entrar. ¿Continuar?')) return
           logout()
           window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: sessionStorage }))
-        }}>Salir</button></> : <Link to="/login">Acceder</Link>}
+          navigate('/login', { replace: true })
+        }}>Cerrar sesión</button>{user?.role === 'MASTER' && <Link to="/users">Usuarios</Link>}</> : <Link to="/login">Acceder</Link>}
       </nav>
     </header>
     <main className="container">{user && <p className="identity">{user.name || user.sub}</p>}<Outlet /></main>
@@ -121,11 +127,12 @@ function ResultsPanelPage() {
 }
 
 export default function App() {
-  return <SessionProvider><Routes><Route element={<Layout />}>
+  return <SessionProvider><Routes><Route path="join/:invitationId" element={<GuestJoinPage />} /><Route element={<Layout />}>
     <Route index element={<Navigate to="/dashboard" replace />} />
     <Route path="login" element={<LoginPage />} />
     {import.meta.env.DEV && <Route path="dev-login" element={<DevLoginPage />} />}
     <Route element={<ProtectedRoute />}>
+      <Route path="users" element={<UsersPage />} />
       <Route path="host/create" element={<HostCreateSessionPage />} />
       <Route path="host/lobby/:roomCode" element={<HostLobbyRoute />} />
       <Route path="join" element={<JoinSessionPage />} />

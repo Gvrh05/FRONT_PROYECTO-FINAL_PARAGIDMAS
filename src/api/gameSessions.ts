@@ -7,6 +7,7 @@ const participantSchema = z.object({ userId: z.string(), name: z.string(), conne
 const sessionSchema = z.object({
   sessionId: roomCodeSchema,
   roomCode: roomCodeSchema,
+  invitationId: z.string().optional(),
   status: z.enum(['LOBBY', 'IN_PROGRESS', 'FINISHED']),
   hostId: z.string(),
   quizId: quizIdSchema,
@@ -24,6 +25,8 @@ export const finishSchema = z.object({
 })
 export type LiveRound = z.infer<typeof liveRoundSchema>
 export const snapshotSchema = sessionSchema.extend({ participants: z.array(participantSchema), game: liveRoundSchema.optional() })
+// Guest snapshots deliberately omit private host and quiz identifiers.
+export const guestSnapshotSchema = snapshotSchema.omit({ hostId: true, quizId: true }).transform((snapshot) => ({ ...snapshot, hostId: '', quizId: '' }))
 export const participantsUpdatedSchema = z.object({ participants: z.array(participantSchema) })
 export const sessionStartedSchema = z.object({ sessionId: roomCodeSchema, startedAt: z.string() })
 export type Participant = z.infer<typeof participantSchema>

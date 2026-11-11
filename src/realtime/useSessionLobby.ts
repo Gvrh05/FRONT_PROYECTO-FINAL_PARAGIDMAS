@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { finishSchema, getSession, liveRoundSchema, participantsUpdatedSchema, roomCodeSchema, sessionStartedSchema, snapshotSchema } from '../api/gameSessions'
+import { finishSchema, getSession, guestSnapshotSchema, liveRoundSchema, participantsUpdatedSchema, roomCodeSchema, sessionStartedSchema, snapshotSchema } from '../api/gameSessions'
 import type { LiveRound, Participant, Session, SessionSnapshot } from '../api/gameSessions'
 import { AppError } from '../api/http'
 import { expireAuth } from '../auth/storage'
@@ -8,8 +8,9 @@ import { useAuth } from '../auth/useAuth'
 import { leaseGameSocket } from './socket'
 
 /** Mount with a roomCode key (see App routes) so no room can display another's state. */
-export function useSessionLobby(roomCode: string) {
-  const { token } = useAuth()
+export function useSessionLobby(roomCode: string, guestToken?: string) {
+  const { token: accountToken } = useAuth()
+  const token = guestToken ?? accountToken
   const [session, setSession] = useState<SessionSnapshot | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [connected, setConnected] = useState(false)
@@ -31,9 +32,9 @@ export function useSessionLobby(roomCode: string) {
     if (!token || !roomCodeSchema.safeParse(roomCode).success) return
     const key = Symbol(roomCode)
     leaseRef.current = key
-    const active = () => leaseRef.current === key
+    const active = () => leaseRef.current === key && (Boolean(guestToken) || localStorage.getItem('token') === token)
     const controller = new AbortController()
-    const lease = leaseGameSocket(token, roomCode)
+    const lease = leaseGameSocket(token, roomCode, Boolean(guestToken))
     const socket = lease.socket
     let receivedSnapshot = false
     let latestParticipants: Participant[] | null = null
@@ -65,7 +66,7 @@ export function useSessionLobby(roomCode: string) {
     }
     const onState = (payload: unknown) => {
       if (!active()) return
-      const result = snapshotSchema.safeParse(payload)
+      const result = (guestToken ? guestSnapshotSchema : snapshotSchema).safeParse(payload)
       if (!result.success || result.data.roomCode !== roomCode) return
       receivedSnapshot = true
       latestParticipants = result.data.participants
@@ -93,13 +94,16 @@ export function useSessionLobby(roomCode: string) {
       const message = payload && typeof payload === 'object' && 'message' in payload ? String(payload.message) : 'No se pudo completar la operación en vivo.'
       setPending(false)
       setError(new AppError(message, undefined, code))
-      if (code === 'UNAUTHENTICATED') expireAuth()
+      if (code === 'UNAUTHENTICATED' && !guestToken) expireAuth()
     }
     const onDisconnect = (reason: string) => {
       if (!active()) return
       setConnected(false)
       setPending(false)
-      if (reason === 'io server disconnect') expireAuth()
+      if (reason === 'io server disconnect') {
+        if (!guestToken) expireAuth()
+        else setError(new AppError('La credencial de invitado venció. Sal de la partida para volver a entrar.'))
+      }
     }
     const onConnectError = () => {
       if (active()) { setConnected(false); setError(new AppError('No hay conexión en vivo. Revisa el backend; se intentará reconectar.')) }
@@ -142,7 +146,7 @@ export function useSessionLobby(roomCode: string) {
     socket.on('disconnect', onDisconnect)
     socket.on('connect_error', onConnectError)
 
-    void getSession(roomCode, controller.signal).then((snapshot) => {
+    if (!guestToken) void getSession(roomCode, controller.signal).then((snapshot) => {
       if (!active() || receivedSnapshot || Date.now() - lastStartedAt.current < 2000) return
       accept({ ...snapshot, participants: latestParticipants ?? snapshot.participants })
     }).catch((failure: unknown) => { if (active() && !controller.signal.aborted) setError(failure) })
@@ -166,7 +170,7 @@ export function useSessionLobby(roomCode: string) {
       socket.off('connect_error', onConnectError)
       lease.release()
     }
-  }, [roomCode, token])
+  }, [roomCode, token, guestToken])
 
   const invalid = !roomCodeSchema.safeParse(roomCode).success
   return { session, connected, round, finished, pending, send: (event: string, questionId: string, answer?: boolean) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }

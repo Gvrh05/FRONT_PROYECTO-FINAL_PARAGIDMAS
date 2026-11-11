@@ -13,7 +13,7 @@ vi.mock('../session/session', () => ({ useSession: vi.fn() }))
 const userSession = {
   accessToken: 'test-token',
   generation: 4,
-  user: { id: 'owner-1', username: 'teacher', role: 'teacher' },
+  user: { id: 'owner-1', username: 'teacher', role: 'PROFESOR' as const },
 }
 
 function setupApi() {

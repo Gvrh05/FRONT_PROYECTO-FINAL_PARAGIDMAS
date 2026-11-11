@@ -34,13 +34,13 @@ describe('clientes HTTP', () => {
       expect(JSON.parse(config.data)).toEqual({ username: 'docente', password: 'clave' })
       return [200, {
         accessToken: 'jwt-demo',
-        user: { id: 'u-1', username: 'docente', role: 'teacher' },
+        user: { id: 'u-1', username: 'docente', role: 'PROFESOR' },
       }]
     })
     const { data } = await auth.post('/login', { username: 'docente', password: 'clave' })
     expect(data).toEqual({
       accessToken: 'jwt-demo',
-      user: { id: 'u-1', username: 'docente', role: 'teacher' },
+      user: { id: 'u-1', username: 'docente', role: 'PROFESOR' },
     })
     authMock.restore()
 

@@ -1,8 +1,8 @@
 export const API_URL =
-  import.meta.env.VITE_API_URL ?? 'http://localhost:3000/kahoot-api'
+  import.meta.env.VITE_API_URL ?? '/kahoot-api'
 
 export const AUTH_API_URL =
-  import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:3001/auth'
+  import.meta.env.VITE_AUTH_API_URL ?? '/auth'
 
 /** The API origin used to turn the relative private imageUrl into a request. */
 export const API_ORIGIN = new URL(API_URL, window.location.origin).origin

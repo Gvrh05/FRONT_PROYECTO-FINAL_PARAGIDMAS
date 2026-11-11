@@ -12,6 +12,7 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { QuestionImageInput } from './QuestionImageInput'
 
 interface QuestionImageProps {
+  readOnly?: boolean
   quizId: string
   question: QuestionResource
   onChanged: (question: QuestionResource) => void
@@ -19,6 +20,7 @@ interface QuestionImageProps {
 }
 
 export function QuestionImage({
+  readOnly = false,
   quizId,
   question,
   onChanged,
@@ -62,6 +64,7 @@ export function QuestionImage({
   }, [question.imageUrl, images, session, isCurrent, version])
 
   async function uploadReplacement() {
+    if (readOnly) return
     if (!api || !session || !replacement || pendingRef.current) return
     pendingRef.current = true
     setPending(true)
@@ -92,6 +95,7 @@ export function QuestionImage({
   }
 
   async function removeImage() {
+    if (readOnly) return
     if (!api || !session || pendingRef.current) return
     pendingRef.current = true
     setPending(true)
@@ -135,7 +139,7 @@ export function QuestionImage({
             <button
               type="button"
               onClick={() => setAskingRemove(true)}
-              disabled={pending}
+              disabled={pending || readOnly}
             >
               Quitar imagen
             </button>
@@ -152,7 +156,7 @@ export function QuestionImage({
         <QuestionImageInput
           idPrefix={`image-${question.id}`}
           file={replacement}
-          disabled={pending}
+          disabled={pending || readOnly}
           serverError={uploadError}
           onSelect={(next) => {
             setReplacement(next)
@@ -160,7 +164,7 @@ export function QuestionImage({
           }}
         />
         {replacement ? (
-          <button type="button" onClick={uploadReplacement} disabled={pending}>
+          <button type="button" onClick={uploadReplacement} disabled={pending || readOnly}>
             {pending ? 'Subiendo…' : 'Subir imagen'}
           </button>
         ) : null}
