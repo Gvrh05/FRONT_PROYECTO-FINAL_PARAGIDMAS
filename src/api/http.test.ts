@@ -2,11 +2,29 @@ import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AUTH_API_URL, API_URL } from './config'
-import { apiErrorMessage, createHttp } from './http'
+import { apiErrorMessage, createHttp, http } from './http'
 import { uploadQuestionImage } from './quizzes'
 
 describe('clientes HTTP', () => {
   afterEach(() => vi.restoreAllMocks())
+
+  it('el cliente de salas usa sessionStorage y descarta respuestas de otra sesión', async () => {
+    sessionStorage.setItem('token', 'cuenta-A')
+    localStorage.setItem('token', 'token-legacy-no-usado')
+    const mock = new MockAdapter(http)
+    try {
+      mock.onGet('/session-fixture').reply((config) => {
+        expect(config.headers?.Authorization).toBe('Bearer cuenta-A')
+        return [200, { ok: true }]
+      })
+      await expect(http.get('/session-fixture')).resolves.toMatchObject({ data: { ok: true } })
+      mock.onGet('/stale-session-fixture').reply(() => {
+        sessionStorage.setItem('token', 'cuenta-B')
+        return [200, { private: 'cuenta-A' }]
+      })
+      await expect(http.get('/stale-session-fixture')).rejects.toBeInstanceOf(axios.CanceledError)
+    } finally { mock.restore() }
+  })
 
   it('usa el prefijo de API y adjunta el Bearer actual', async () => {
     const client = createHttp({

@@ -4,10 +4,13 @@ const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const origin = process.env.VERIFY_ORIGIN || 'http://localhost:45173';
+const authBase = (process.env.VERIFY_AUTH_URL || `${origin}/auth`).replace(/\/$/, '');
+const apiBase = (process.env.VERIFY_API_URL || `${origin}/kahoot-api`).replace(/\/$/, '');
 const config = Object.fromEntries(fs.readFileSync(process.env.VERIFY_ENV_FILE, 'utf8').split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
 let browser, token, quizId, user, teacherToken, webUsername;
 async function api(path, method = 'GET', body, credential = token) {
-  const response = await fetch(origin + path, { method, headers: { ...(credential && { authorization: `Bearer ${credential}` }), ...(body && { 'content-type': 'application/json' }) }, ...(body && { body: JSON.stringify(body) }) });
+  const url = path.startsWith('/auth/') ? authBase + path.slice('/auth'.length) : path.startsWith('/kahoot-api/') ? apiBase + path.slice('/kahoot-api'.length) : origin + path;
+  const response = await fetch(url, { method, headers: { ...(credential && { authorization: `Bearer ${credential}` }), ...(body && { 'content-type': 'application/json' }) }, ...(body && { body: JSON.stringify(body) }) });
   assert(response.ok, `${method} ${path} returned ${response.status}`);
   return response.status === 204 ? undefined : response.json();
 }
@@ -46,7 +49,7 @@ async function main() {
   await guest.getByText('Estudiante móvil', { exact: true }).first().waitFor();
   await host.getByText('Estudiante móvil', { exact: true }).waitFor();
   const stored = await guest.evaluate(() => JSON.stringify(sessionStorage));
-  assert(!await guest.evaluate(() => localStorage.getItem('token')));
+  assert(!await guest.evaluate(() => sessionStorage.getItem('token')));
   await guest.reload();
   await guest.getByRole('status').filter({ hasText: /^Conectado$/ }).waitFor();
   assert.equal(await guest.evaluate(() => JSON.stringify(sessionStorage)), stored);
@@ -61,25 +64,29 @@ async function main() {
   await host.waitForURL('**/dashboard');
   await host.getByRole('button', { name: 'Cerrar sesión', exact: true }).first().click();
   await host.waitForURL('**/login');
-  assert(!await host.evaluate(() => localStorage.getItem('token')));
+  assert(!await host.evaluate(() => sessionStorage.getItem('token')));
   await host.getByLabel('Usuario', { exact: true }).fill(config.DEMO_USER_USERNAME || 'profesor_test');
   await host.getByLabel('Contraseña', { exact: true }).fill(config.DEMO_USER_PASSWORD);
   await host.getByRole('button', { name: 'Ingresar', exact: true }).click();
   await host.waitForURL('**/dashboard');
   await host.goto(origin + '/users');
   await host.getByRole('heading', { name: 'Crear profesor', exact: true }).waitFor();
-  const masterToken = await host.evaluate(() => localStorage.getItem('token'));
+  const masterToken = await host.evaluate(() => sessionStorage.getItem('token'));
   webUsername = 'ui_' + crypto.randomBytes(4).toString('hex');
   await host.getByLabel('Nombre de usuario', { exact: true }).fill(webUsername);
   await host.getByLabel('Contraseña', { exact: true }).fill(password);
   await host.getByRole('button', { name: 'Guardar', exact: true }).click();
   await host.getByText(webUsername, { exact: true }).waitFor();
-  assert.equal(await host.evaluate(() => localStorage.getItem('token')), masterToken);
+  assert.equal(await host.evaluate(() => sessionStorage.getItem('token')), masterToken);
   await host.goto(origin + '/quizzes');
-  const demoDelete = host.getByRole('button', { name: 'Eliminar', exact: true });
+  const demoDelete = host.getByTitle('El cuestionario demo no se puede eliminar');
   await demoDelete.first().waitFor();
   assert(await demoDelete.count() > 0);
   assert(await demoDelete.first().isDisabled());
+  const demoCard = host.locator('li.quiz-item').filter({ hasText: 'Demo · solo lectura' });
+  await demoCard.getByRole('button', { name: 'Abrir', exact: true }).click();
+  await host.locator('img').first().waitFor();
+  await host.waitForFunction(() => [...document.querySelectorAll('img')].length === 10 && [...document.querySelectorAll('img')].every((image) => image.complete && image.naturalWidth > 0));
   assert.deepEqual(errors, []);
   console.log('PASS browser: MASTER creates teacher without session replacement, demo controls, account switch/logout, protected users, local QR/link, anonymous mobile guest, lobby, answer and reload');
 }

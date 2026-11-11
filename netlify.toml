@@ -2,6 +2,16 @@
   command = "node scripts/validate-netlify-env.mjs && pnpm build"
   publish = "dist"
 
+[build.environment]
+  NODE_VERSION = "22.19.0"
+
+# These URLs are public configuration, not credentials. Rebuild after changes.
+[context.production.environment]
+  VITE_API_URL = "https://backendproyecto-final-paradigmas-production.up.railway.app/kahoot-api"
+  VITE_AUTH_API_URL = "https://authproyecto-final-paradigmas-production.up.railway.app/auth"
+  VITE_WS_URL = "https://backendproyecto-final-paradigmas-production.up.railway.app"
+  VITE_PUBLIC_WEB_URL = "https://project-deploy-985df3.netlify.app"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
