@@ -65,7 +65,7 @@ describe('flujo principal de autoría', () => {
     expect(await screen.findByRole('heading', { name: 'Ciencias' })).toBeInTheDocument()
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Preguntas' })).toBeInTheDocument())
     expect(screen.getByText(/todav/)).toBeInTheDocument()
-    expect(localStorage.getItem('token')).toBe('test-token')
+    expect(sessionStorage.getItem('token')).toBe('test-token')
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
     expect(await screen.findByRole('heading', { name: 'Profelink Kahoot' })).toBeInTheDocument()
     expect(localStorage.length).toBe(0)

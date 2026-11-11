@@ -56,7 +56,7 @@ http.interceptors.request.use((config) => {
 })
 
 http.interceptors.response.use((response) => {
-  if (response.config.headers.Authorization !== `Bearer ${localStorage.getItem('token')}`) throw new axios.CanceledError('Sesión cambiada')
+  if (response.config.headers.Authorization !== `Bearer ${sessionStorage.getItem('token')}`) throw new axios.CanceledError('Sesión cambiada')
   return response
 }, (error: unknown) => {
   if (axios.isCancel(error)) return Promise.reject(error)
