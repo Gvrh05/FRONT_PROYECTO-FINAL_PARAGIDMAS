@@ -8,7 +8,7 @@ import { useAuth } from '../auth/useAuth'
 import { leaseGameSocket } from './socket'
 
 /** Mount with a roomCode key (see App routes) so no room can display another's state. */
-export function useSessionLobby(roomCode: string, guestToken?: string) {
+export function useSessionLobby(roomCode: string, guestToken?: string, loadHostSnapshot = true) {
   const { token: accountToken } = useAuth()
   const token = guestToken ?? accountToken
   const [session, setSession] = useState<SessionSnapshot | null>(null)
@@ -146,7 +146,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string) {
     socket.on('disconnect', onDisconnect)
     socket.on('connect_error', onConnectError)
 
-    if (!guestToken) void getSession(roomCode, controller.signal).then((snapshot) => {
+    if (!guestToken && loadHostSnapshot) void getSession(roomCode, controller.signal).then((snapshot) => {
       if (!active() || receivedSnapshot || Date.now() - lastStartedAt.current < 2000) return
       accept({ ...snapshot, participants: latestParticipants ?? snapshot.participants })
     }).catch((failure: unknown) => { if (active() && !controller.signal.aborted) setError(failure) })
@@ -170,7 +170,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string) {
       socket.off('connect_error', onConnectError)
       lease.release()
     }
-  }, [roomCode, token, guestToken])
+  }, [roomCode, token, guestToken, loadHostSnapshot])
 
   const invalid = !roomCodeSchema.safeParse(roomCode).success
   return { session, connected, round, finished, pending, send: (event: string, questionId: string, answer?: boolean) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }

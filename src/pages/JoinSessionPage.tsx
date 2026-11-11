@@ -2,15 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
-import { getSession, joinSession, roomCodeSchema } from '../api/gameSessions'
-import { useAuth } from '../auth/useAuth'
+import { joinSession, roomCodeSchema } from '../api/gameSessions'
 import { ErrorBanner } from '../components/ErrorBanner'
 
 const formSchema = z.object({ roomCode: roomCodeSchema, name: z.string().trim().max(80, 'El nombre puede tener hasta 80 caracteres.') })
 
 export function JoinSessionPage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const [roomCode, setRoomCode] = useState('')
   const [name, setName] = useState('')
   const [error, setError] = useState<unknown>(null)
@@ -25,12 +23,6 @@ export function JoinSessionPage() {
     setBusy(true)
     setError(null)
     try {
-      const session = await getSession(result.data.roomCode)
-      if (!alive.current) return
-      if (session.hostId === user?.sub) {
-        navigate(`/host/lobby/${session.roomCode}`)
-        return
-      }
       await joinSession(result.data.roomCode, result.data.name || undefined)
       if (alive.current) navigate(`/play/lobby/${result.data.roomCode}`)
     } catch (failure) { if (alive.current) setError(failure) }
