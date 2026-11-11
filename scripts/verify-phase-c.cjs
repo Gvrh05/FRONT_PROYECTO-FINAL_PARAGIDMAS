@@ -143,7 +143,7 @@ async function main() {
     await cdp.click(host, 'Crear sala');
     await cdp.wait(host, `!!document.querySelector('[data-testid="room-code"]') && ${online}`, 'host conectado');
     const roomCode = await cdp.evaluate(host, `document.querySelector('[data-testid="room-code"]').textContent`);
-    const hostToken = await cdp.evaluate(host, `localStorage.getItem('token')`);
+    const hostToken = await cdp.evaluate(host, `sessionStorage.getItem('token')`);
     const api = async (suffix = '') => {
       const response = await fetch(`${backend.base}/kahoot-api/game-sessions/${roomCode}${suffix}`, { headers: { Authorization: `Bearer ${hostToken}` } });
       assert.equal(response.status, 200);
@@ -219,7 +219,7 @@ async function main() {
     console.log('PASS móvil 320px: sin overflow, código legible y botones >=48px.');
 
     await cdp.click(player, 'Salir');
-    await cdp.wait(player, `location.pathname === '/login' && localStorage.getItem('token') === null`, 'logout');
+    await cdp.wait(player, `location.pathname === '/login' && sessionStorage.getItem('token') === null`, 'logout');
     await cdp.wait(host, `Array.from(document.querySelectorAll('.participants li')).some(e => !e.textContent.includes('Anfitrión') && e.textContent.includes('Sin conexión'))`, 'presencia offline después de logout');
     assert.equal((await api('/participants')).find((p) => p.userId === 'test-player-id')?.connected, false);
     await cdp.click(player, 'Soy player (test-player-id)');
@@ -237,18 +237,18 @@ async function main() {
     cdp.handlers.add(intercept401);
     await cdp.send('Fetch.enable', { patterns: [{ urlPattern: `${backend.base}/kahoot-api/game-sessions/available-quizzes`, requestStage: 'Response' }] }, player);
     await cdp.evaluate(player, `(() => {
-      window.__phaseCValidToken = localStorage.getItem('token');
-      localStorage.setItem('token', 'invalid-old-request');
+      window.__phaseCValidToken = sessionStorage.getItem('token');
+      sessionStorage.setItem('token', 'invalid-old-request');
       window.__phaseCPending = import('/src/api/http.ts').then(({http}) => http.get('/game-sessions/available-quizzes').catch(() => null));
     })()`);
     const old401 = await Promise.race([paused401, delay(45000).then(() => { throw new Error('Old 401 was not intercepted'); })]);
-    await cdp.evaluate(player, `localStorage.setItem('token', window.__phaseCValidToken)`);
+    await cdp.evaluate(player, `sessionStorage.setItem('token', window.__phaseCValidToken)`);
     await cdp.send('Fetch.continueResponse', { requestId: old401 }, player);
     await cdp.send('Fetch.disable', {}, player);
     cdp.handlers.delete(intercept401);
     assert.equal(await cdp.evaluate(player, `window.__phaseCPending.then(() => {
       delete window.__phaseCPending; delete window.__phaseCValidToken;
-      return localStorage.getItem('token') !== null && location.pathname === '/host/create';
+      return sessionStorage.getItem('token') !== null && location.pathname === '/host/create';
     })`), true);
     console.log('PASS token actualizado: un 401 atrasado de credenciales viejas no borra la sesión vigente.');
 
@@ -271,9 +271,9 @@ async function main() {
     assert.equal((await secondStateResponse.json()).participants.find((p) => p.userId === 'test-player-id')?.connected, true);
     console.log(`PASS cambio SPA de sala ${roomCode} → ${secondRoom}: se libera presencia anterior y no se mezcla estado.`);
 
-    await cdp.evaluate(host, `localStorage.setItem('token', 'invalid')`);
+    await cdp.evaluate(host, `sessionStorage.setItem('token', 'invalid')`);
     await cdp.click(host, 'Crear sala', 'a');
-    await cdp.wait(host, `location.pathname === '/login' && localStorage.getItem('token') === null`, '401 limpia auth y redirige');
+    await cdp.wait(host, `location.pathname === '/login' && sessionStorage.getItem('token') === null`, '401 limpia auth y redirige');
     assert.equal(await cdp.evaluate(player, `Array.from(document.querySelectorAll('.participants li')).some(e => !e.textContent.includes('Anfitrión') && e.textContent.includes('En línea'))`), true);
     console.log('PASS HTTP 401: limpia token/user, desconecta socket y vuelve a /login.');
     console.log('Verificación de navegador completa; Postgres real, sin seed ni borrado de filas.');

@@ -9,20 +9,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState(readStoredAuth)
   const logout = useCallback(() => {
     disconnectGameSocket()
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
     setAuth({ token: null, user: null })
   }, [])
   const setSession = useCallback((token: string, user: AuthUser) => {
     disconnectGameSocket()
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(user))
+    sessionStorage.setItem('token', token)
+    sessionStorage.setItem('user', JSON.stringify(user))
     setAuth({ token, user })
   }, [])
 
   useEffect(() => {
     const sync = (event: StorageEvent) => {
-      if (event.key === 'token' || event.key === 'user' || event.key === null) {
+      if ((!event.storageArea || event.storageArea === sessionStorage) &&
+        (event.key === 'token' || event.key === 'user' || event.key === null)) {
         disconnectGameSocket()
         setAuth(readStoredAuth())
       }

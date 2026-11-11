@@ -45,7 +45,7 @@ function Layout() {
       <nav aria-label="Principal">
         {token ? <><Link to="/dashboard">Dashboard</Link><Link to="/quizzes">Quizzes</Link><Link to="/host/create">Crear sala</Link><Link to="/join">Unirse</Link><button className="secondary" onClick={() => {
           logout()
-          window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: localStorage }))
+          window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: sessionStorage }))
         }}>Salir</button></> : <Link to="/login">Acceder</Link>}
       </nav>
     </header>

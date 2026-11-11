@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { LiveRoundPanel, FinalScores } from '../components/LiveRoundPanel'
 import { ParticipantList } from '../components/ParticipantList'
@@ -6,8 +7,12 @@ import { RoomCodeBadge } from '../components/RoomCodeBadge'
 import { useSessionLobby } from '../realtime/useSessionLobby'
 
 export function PlayerLobbyPage({ roomCode }: { roomCode: string }) {
+  const { user } = useAuth()
   // The shared hook ALWAYS sends join-session on connect/reconnect, even after REST join.
   const { session, connected, error, loading, round, finished, pending, send } = useSessionLobby(roomCode)
+  if (session && session.hostId === user?.sub) {
+    return <Navigate to={`/host/lobby/${session.roomCode}`} replace />
+  }
   return <section className="card">
     <p className="eyebrow">Jugador · 2 de 2</p><h1>Tu sala de juego</h1>
     <ErrorBanner error={error} />

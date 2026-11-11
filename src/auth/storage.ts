@@ -19,9 +19,9 @@ function parseUser(value: unknown): AuthUser | null {
 }
 
 export function readStoredAuth(): { token: string | null; user: AuthUser | null } {
-  const token = localStorage.getItem('token') || null
+  const token = sessionStorage.getItem('token') || null
   let user: AuthUser | null = null
-  try { user = parseUser(JSON.parse(localStorage.getItem('user') ?? 'null')) } catch { /* Invalid stored user is not trusted. */ }
+  try { user = parseUser(JSON.parse(sessionStorage.getItem('user') ?? 'null')) } catch { /* Invalid stored user is not trusted. */ }
   if (token && !user) {
     // Display only. Backend signature verification is always the authority.
     try {
@@ -33,7 +33,7 @@ export function readStoredAuth(): { token: string | null; user: AuthUser | null 
 }
 
 export function expireAuth(): void {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('user')
   window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
 }

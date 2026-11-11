@@ -43,7 +43,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
       <p className="status" data-testid="session-status" role="status">{finished || session.status === 'FINISHED' ? 'La sala ha finalizado' : session.status === 'IN_PROGRESS' ? 'Partida en curso' : 'En lobby'}</p>
       <ParticipantList participants={session.participants} hostId={session.hostId} />
       {session.status === 'LOBBY' && <>
-        {!hasOtherConnectedPlayer && <p>Espera a que se conecte otro jugador para iniciar.</p>}
+        {!hasOtherConnectedPlayer && <p>Para iniciar, comparte el código con alguien que entre con otra cuenta. Si estás probando en el mismo equipo, abre una ventana privada e inicia sesión allí con la cuenta del jugador.</p>}
         <button type="button" disabled={!canStart} onClick={() => void start()}>{busy ? 'Iniciando…' : 'Iniciar partida'}</button>
       </>}
       {finished ? <FinalScores scores={finished.scores} /> : isHost && round && <LiveRoundPanel round={round} connected={connected} host pending={pending} onNext={() => send('next-question', round.questionId)} />}

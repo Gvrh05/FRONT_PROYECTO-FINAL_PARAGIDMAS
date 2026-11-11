@@ -42,8 +42,8 @@ const SessionContext = createContext<SessionContextValue | null>(null)
 // authentication/ownership always remain the backend's responsibility.
 function readPersistedSession(): LoginResponse | null {
   try {
-    const accessToken = localStorage.getItem('token')
-    const value: unknown = JSON.parse(localStorage.getItem('user') ?? 'null')
+    const accessToken = sessionStorage.getItem('token')
+    const value: unknown = JSON.parse(sessionStorage.getItem('user') ?? 'null')
     if (!accessToken || !value || typeof value !== 'object') return null
     const user = value as Record<string, unknown>
     const id = typeof user.id === 'string' ? user.id : user.sub
@@ -56,10 +56,9 @@ function readPersistedSession(): LoginResponse | null {
   } catch { return null }
 }
 
-// Native storage events only reach other tabs. Notify existing AuthContext and
-// other mounted providers in this tab too, without changing either public API.
+// Keep both providers in sync when the session changes in this tab.
 function notifyStoredSession() {
-  window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: localStorage }))
+  window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: sessionStorage }))
 }
 
 function parseLogin(data: unknown): LoginResponse {
@@ -119,8 +118,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setSession(null)
     setNotice(message ?? null)
     counter.current += 1
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
     notifyStoredSession()
   }, [])
 
@@ -139,7 +138,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setSession(next)
     }
     const storage = (event: StorageEvent) => {
-      if ((!event.storageArea || event.storageArea === localStorage) &&
+      if ((!event.storageArea || event.storageArea === sessionStorage) &&
         (event.key === null || event.key === 'token' || event.key === 'user')) sync()
     }
     sync()
@@ -171,8 +170,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         sessionRef.current = next
         setSession(next)
         setNotice(null)
-        localStorage.setItem('token', next.accessToken)
-        localStorage.setItem('user', JSON.stringify({ ...next.user, sub: next.user.id, name: next.user.username }))
+        sessionStorage.setItem('token', next.accessToken)
+        sessionStorage.setItem('user', JSON.stringify({ ...next.user, sub: next.user.id, name: next.user.username }))
         notifyStoredSession()
       } catch (error) {
         if (attempt !== loginAttempt.current) return
