@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { GuestJoinPage } from './pages/GuestJoinPage'
+import { RegisterPage } from './pages/RegisterPage'
 import { UsersPage } from './pages/UsersPage'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { useAuth } from './auth/useAuth'
@@ -35,8 +36,11 @@ function DevLoginPage() {
 
 function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   return <div className="auth-page">
+    {location.state?.registered && <p role="status">Perfil creado. Inicia sesión para jugar.</p>}
     <LoginForm onSuccess={() => navigate('/dashboard', { replace: true })} />
+    <Link to="/register">Crear perfil</Link>
   </div>
 }
 
@@ -130,6 +134,7 @@ export default function App() {
   return <SessionProvider><Routes><Route path="join/:invitationId" element={<GuestJoinPage />} /><Route element={<Layout />}>
     <Route index element={<Navigate to="/dashboard" replace />} />
     <Route path="login" element={<LoginPage />} />
+    <Route path="register" element={<RegisterPage />} />
     {import.meta.env.DEV && <Route path="dev-login" element={<DevLoginPage />} />}
     <Route element={<ProtectedRoute />}>
       <Route path="users" element={<UsersPage />} />
