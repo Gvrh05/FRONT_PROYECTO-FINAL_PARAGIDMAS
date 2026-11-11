@@ -8,6 +8,7 @@ import { LiveRoundPanel, FinalScores } from '../components/LiveRoundPanel'
 import { ParticipantList } from '../components/ParticipantList'
 import { RoomCodeBadge } from '../components/RoomCodeBadge'
 import { useSessionLobby } from '../realtime/useSessionLobby'
+import { InvitationLink } from '../components/InvitationLink'
 
 export function HostLobbyPage({ roomCode }: { roomCode: string }) {
   const { user } = useAuth()
@@ -39,6 +40,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
     {loading && <p role="status">Cargando la sala…</p>}
     {session && <>
       <RoomCodeBadge roomCode={session.roomCode} />
+      {isHost && session.invitationId && <InvitationLink invitationId={session.invitationId} />}
       <p className="connection" role="status">{connected ? 'Conexión en vivo activa' : 'Reconectando…'}</p>
       <p className="status" data-testid="session-status" role="status">{finished || session.status === 'FINISHED' ? 'La sala ha finalizado' : session.status === 'IN_PROGRESS' ? 'Partida en curso' : 'En lobby'}</p>
       <ParticipantList participants={session.participants} hostId={session.hostId} />

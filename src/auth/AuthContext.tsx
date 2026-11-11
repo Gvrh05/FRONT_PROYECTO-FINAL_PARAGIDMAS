@@ -12,12 +12,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem('token')
     sessionStorage.removeItem('user')
     setAuth({ token: null, user: null })
+    window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: localStorage }))
   }, [])
   const setSession = useCallback((token: string, user: AuthUser) => {
     disconnectGameSocket()
     sessionStorage.setItem('token', token)
     sessionStorage.setItem('user', JSON.stringify(user))
     setAuth({ token, user })
+    window.dispatchEvent(new StorageEvent('storage', { key: 'token', storageArea: localStorage }))
   }, [])
 
   useEffect(() => {

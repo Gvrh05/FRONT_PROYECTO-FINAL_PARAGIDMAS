@@ -336,3 +336,20 @@ export default defineConfig([
 ])
 
 ```
+# Cuentas docentes y acceso público
+
+Auth administra roles MASTER/PROFESOR. Usuarios está reservado a MASTER; los
+invitados entran por `/join/:invitationId` sin cuenta y mantienen su credencial
+temporal en sessionStorage. El quiz demo es de solo lectura.
+
+Para desarrollo, ejecutar `pnpm dev`: Vite escucha en todas las interfaces y
+reenvía `/auth` a 3001, `/kahoot-api`, `/uploads` y `/socket.io` a 3000.
+Usar las URLs relativas de `.env.example`. En producción Nginx realiza los mismos
+proxies a los contenedores `auth` y `api`; `/game` es el namespace Socket.IO.
+
+Para QR en teléfonos, abrir la web desde una IP accesible o configurar
+`VITE_PUBLIC_WEB_URL=http://192.168.1.20:5173` antes del build. Comprobar la red
+y firewall manualmente. Los enlaces QR nunca llevan tokens y se generan localmente.
+Para publicación en Internet usar HTTPS. `localhost` solo funciona en el equipo local.
+
+Validación: `pnpm build`, `pnpm lint`, `pnpm test` y `pnpm verify:production`.

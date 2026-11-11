@@ -14,7 +14,10 @@ export function createHttp({ baseURL, getToken, onUnauthorized }: HttpOptions): 
     if (token) config.headers.set('Authorization', `Bearer ${token}`)
     return config
   })
-  client.interceptors.response.use((response) => response, (error: unknown) => {
+  client.interceptors.response.use((response) => {
+    if (response.config.headers.Authorization && response.config.headers.Authorization !== `Bearer ${getToken()}`) throw new axios.CanceledError('Sesión cambiada')
+    return response
+  }, (error: unknown) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) onUnauthorized()
     return Promise.reject(error)
   })

@@ -55,7 +55,7 @@ describe('sesión en memoria', () => {
     const mock = new MockAdapter(authClient!)
     mock.onPost('/login').reply((config) => {
       expect(config.baseURL).toBe(AUTH_API_URL)
-      return [200, { accessToken: 'memory-token', user: { id: 'u1', username: 'docente', role: 'teacher' } }]
+      return [200, { accessToken: 'memory-token', user: { id: 'u1', username: 'docente', role: 'PROFESOR' } }]
     })
     await user.type(screen.getByLabelText('Usuario'), 'docente')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
@@ -88,7 +88,7 @@ describe('sesión en memoria', () => {
     await user.type(screen.getByLabelText('Contraseña'), 'secret')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
     await user.click(screen.getByRole('button', { name: 'Cancelar acceso' }))
-    resolveResponse?.([200, { accessToken: 'late-token', user: { id: 'u1', username: 'late', role: 'teacher' } }])
+    resolveResponse?.([200, { accessToken: 'late-token', user: { id: 'u1', username: 'late', role: 'PROFESOR' } }])
     await waitFor(() => expect(screen.queryByText(/Bienvenido/)).not.toBeInTheDocument())
     mock.restore()
   })

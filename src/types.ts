@@ -1,7 +1,12 @@
+export type AuthRole = 'MASTER' | 'PROFESOR'
+
 export interface AuthUser {
   id: string
   username: string
-  role: string
+  role: AuthRole
+  active?: boolean
+  isSystem?: boolean
+  credentialVersion?: number
 }
 
 export interface LoginResponse {

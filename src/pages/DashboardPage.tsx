@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import '../App.css'
 import { LoginForm } from '../components/LoginForm'
 import { QuizDetail } from '../components/QuizDetail'
@@ -36,6 +37,7 @@ function Workspace() {
         </a>
         <p className="sidebar-label">Espacio de trabajo</p>
         <nav className="sidebar-nav">
+          {session.user.role === 'MASTER' && <Link to="/users">Usuarios</Link>}
           <button className={section === 'quizzes' ? 'active' : ''} onClick={() => navigate('quizzes')}><span>▦</span> Quices</button>
           <button className={section === 'create-game' ? 'active' : ''} onClick={() => navigate('create-game')}><span>▶</span> Crear partida</button>
           <button className={section === 'results' ? 'active' : ''} onClick={() => navigate('results')}><span>▤</span> Resultados</button>
@@ -43,7 +45,7 @@ function Workspace() {
         <div className="sidebar-account">
           <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
           <div className="account-copy"><strong>{session.user.username}</strong><small>Docente</small></div>
-          <button className="logout-button" aria-label="Cerrar sesión" onClick={() => logout()}>↗</button>
+          <button className="logout-button" aria-label="Cerrar sesión del dashboard" onClick={() => logout()}>Cerrar sesión</button>
         </div>
       </aside>
       <main className="dashboard-main">

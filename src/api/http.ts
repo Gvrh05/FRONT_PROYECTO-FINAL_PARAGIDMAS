@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { ZodError } from 'zod'
 import { expireAuth } from '../auth/storage'
+import { API_URL } from './config'
 
 // Preserve existing imports without routing authoring/Auth through the singleton.
 export { createHttp } from './createHttp'
@@ -46,8 +47,7 @@ export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'No se pudo completar la operación. Intenta de nuevo.'
 }
 
-const origin = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/+$/, '').replace(/\/kahoot-api$/, '')
-export const http = axios.create({ baseURL: `${origin}/kahoot-api`, timeout: 15000 })
+export const http = axios.create({ baseURL: API_URL, timeout: 15000 })
 
 http.interceptors.request.use((config) => {
   const token = sessionStorage.getItem('token')
@@ -55,7 +55,10 @@ http.interceptors.request.use((config) => {
   return config
 })
 
-http.interceptors.response.use((response) => response, (error: unknown) => {
+http.interceptors.response.use((response) => {
+  if (response.config.headers.Authorization !== `Bearer ${localStorage.getItem('token')}`) throw new axios.CanceledError('Sesión cambiada')
+  return response
+}, (error: unknown) => {
   if (axios.isCancel(error)) return Promise.reject(error)
   if (axios.isAxiosError(error)) {
     const status = error.response?.status
@@ -83,6 +86,9 @@ export function apiErrorMessage(error: unknown): string {
   if (error.response.status === 413) return 'La imagen supera el tamaño máximo permitido.'
   if (error.response.status === 415) return 'El archivo no es una imagen JPEG, PNG o WebP válida.'
   if (error.response.status === 404) return 'El recurso ya no está disponible.'
+  if (error.response.status === 409) return 'El nombre ya está en uso o el recurso cambió de estado.'
+  if (error.response.status === 403) return 'No tienes permiso para realizar esta operación.'
+  if (error.response.status === 429) return 'Demasiados intentos. Espera antes de volver a intentarlo.'
   const data = error.response.data as { error?: unknown } | undefined
   const detail = data?.error
   if (typeof detail === 'string' && detail.trim()) return detail

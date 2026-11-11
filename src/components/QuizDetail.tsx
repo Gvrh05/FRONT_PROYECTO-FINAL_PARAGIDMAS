@@ -81,6 +81,7 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
   }
 
   async function confirmQuestionDelete() {
+    if (state.status !== 'ready' || state.quiz.isDemo) return
     if (!api || !session || !deleteQuestionTarget || deletingQuestion) return
     setDeletingQuestion(true)
     setActionError(null)
@@ -117,6 +118,7 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
   }
 
   async function confirmQuizDelete() {
+    if (state.status !== 'ready' || state.quiz.isDemo) return
     if (!api || !session || deletingQuiz) return
     setDeletingQuiz(true)
     setActionError(null)
@@ -190,20 +192,21 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
           <button type="button" onClick={onBack}>
             Volver al listado
           </button>
-          <button type="button" onClick={() => onEdit(quiz)}>
+          <button type="button" disabled={quiz.isDemo} onClick={() => !quiz.isDemo && onEdit(quiz)}>
             Editar cuestionario
           </button>
           <button
             type="button"
             className="danger"
-            onClick={() => setAskingQuizDelete(true)}
-            disabled={deletingQuiz}
+            onClick={() => !quiz.isDemo && setAskingQuizDelete(true)}
+            disabled={deletingQuiz || quiz.isDemo}
           >
             Eliminar cuestionario
           </button>
         </div>
       </div>
 
+      {quiz.isDemo && <p>El cuestionario demo no se puede eliminar. Es de solo lectura.</p>}
       {actionError ? (
         <p role="alert" className="alert">
           {actionError}
@@ -213,13 +216,13 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
       <div className="section-header">
         <h3>Preguntas</h3>
         {form ? null : (
-          <button type="button" onClick={() => setForm({ mode: 'create' })}>
+          <button type="button" disabled={quiz.isDemo} onClick={() => !quiz.isDemo && setForm({ mode: 'create' })}>
             Agregar pregunta
           </button>
         )}
       </div>
 
-      {form ? (
+      {form && !quiz.isDemo ? (
         <QuestionForm
           key={form.mode === 'edit' ? form.question.id : 'new-question'}
           quizId={quizId}
@@ -255,6 +258,7 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
               {question.kind === 'TRUE_FALSE' || question.points === 1 ? 'punto' : 'puntos'}
             </p>
             <QuestionImage
+              readOnly={quiz.isDemo}
               quizId={quizId}
               question={question}
               onChanged={upsertQuestion}
@@ -263,16 +267,16 @@ export function QuizDetail({ quizId, onBack, onEdit }: QuizDetailProps) {
             <div className="actions">
               <button
                 type="button"
-                onClick={() => setForm({ mode: 'edit', question })}
-                disabled={Boolean(form)}
+                onClick={() => !quiz.isDemo && setForm({ mode: 'edit', question })}
+                disabled={Boolean(form) || quiz.isDemo}
               >
                 Editar pregunta
               </button>
               <button
                 type="button"
                 className="danger"
-                onClick={() => setDeleteQuestionTarget(question)}
-                disabled={Boolean(form) || deletingQuestion}
+                onClick={() => !quiz.isDemo && setDeleteQuestionTarget(question)}
+                disabled={Boolean(form) || deletingQuestion || quiz.isDemo}
               >
                 Eliminar pregunta
               </button>

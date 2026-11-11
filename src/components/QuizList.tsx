@@ -44,7 +44,7 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
   }, [api, session, isCurrent, reloadKey])
 
   async function confirmDelete() {
-    if (!api || !session || !deleteTarget || deleting) return
+    if (!api || !session || !deleteTarget || deleteTarget.isDemo || deleting) return
     setDeleting(true)
     setActionError(null)
     const generation = session.generation
@@ -132,21 +132,23 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
                 <button type="button" onClick={() => onOpen(quiz.id)}>
                   Abrir
                 </button>
-                {!quiz.isDemo ? (
+                {(
                   <>
-                    <button type="button" onClick={() => onEdit(quiz)}>
+                    <button type="button" disabled={quiz.isDemo} onClick={() => !quiz.isDemo && onEdit(quiz)}>
                       Editar
                     </button>
                     <button
                       type="button"
                       className="danger"
-                      onClick={() => setDeleteTarget(quiz)}
-                      disabled={deleting}
+                      onClick={() => !quiz.isDemo && setDeleteTarget(quiz)}
+                      disabled={deleting || quiz.isDemo}
+                      title={quiz.isDemo ? 'El cuestionario demo no se puede eliminar' : undefined}
                     >
                       Eliminar
                     </button>
                   </>
-                ) : null}
+                )}
+                {quiz.isDemo && <p>El cuestionario demo no se puede eliminar</p>}
               </div>
             </li>
           ))}

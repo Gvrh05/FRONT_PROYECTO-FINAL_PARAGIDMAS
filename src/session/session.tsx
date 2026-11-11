@@ -13,6 +13,7 @@ import { API_ORIGIN, API_URL, AUTH_API_URL } from '../api/config'
 import { apiErrorMessage } from '../api/http'
 import { createHttp } from '../api/createHttp'
 import { AUTH_EXPIRED_EVENT } from '../auth/storage'
+import { disconnectGameSocket } from '../realtime/socket'
 import type { AuthUser, LoginResponse } from '../types'
 
 export interface Session {
@@ -48,10 +49,11 @@ function readPersistedSession(): LoginResponse | null {
     const user = value as Record<string, unknown>
     const id = typeof user.id === 'string' ? user.id : user.sub
     if (typeof id !== 'string' || !id.trim()) return null
+    if (user.role !== 'MASTER' && user.role !== 'PROFESOR') return null
     return { accessToken, user: {
       id,
       username: typeof user.username === 'string' ? user.username : typeof user.name === 'string' ? user.name : id,
-      role: typeof user.role === 'string' ? user.role : '',
+      role: user.role,
     } }
   } catch { return null }
 }
@@ -85,11 +87,16 @@ function parseLogin(data: unknown): LoginResponse {
   if (
     typeof id !== 'string' ||
     typeof username !== 'string' ||
-    typeof role !== 'string'
+    (role !== 'MASTER' && role !== 'PROFESOR')
   ) {
     throw new Error('Respuesta de autenticación inválida.')
   }
-  return { accessToken, user: { id, username, role } }
+  const profile = user as Record<string, unknown>
+  return { accessToken, user: { id, username, role,
+    active: typeof profile.active === 'boolean' ? profile.active : undefined,
+    isSystem: typeof profile.isSystem === 'boolean' ? profile.isSystem : undefined,
+    credentialVersion: typeof profile.credentialVersion === 'number' ? profile.credentialVersion : undefined,
+  } }
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -113,6 +120,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   )
 
   const endSession = useCallback((message?: string) => {
+    disconnectGameSocket()
     loginAttempt.current += 1
     sessionRef.current = null
     setSession(null)
