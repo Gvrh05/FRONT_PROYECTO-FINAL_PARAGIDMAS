@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm build"
+  command = "node scripts/validate-netlify-env.mjs && pnpm build"
   publish = "dist"
 
 [[redirects]]

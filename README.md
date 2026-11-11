@@ -1,5 +1,8 @@
 # Profelink Kahoot — autoría web y Punto 3
 
+Despliegue actual con registro y juego público: [Netlify + Railway](docs/netlify.md).
+Las secciones históricas del Punto 3 más abajo describen etapas anteriores.
+
 Aplicación React con landing, autenticación, dashboard para administrar quizzes,
 y una sala de juego en vivo. La autoría permite crear y mantener cuestionarios;
 el Punto 3 permite crear salas, unirse, observar participantes y comenzar una
