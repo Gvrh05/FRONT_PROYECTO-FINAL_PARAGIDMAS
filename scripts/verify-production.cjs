@@ -10,7 +10,7 @@ function verifyProductionBundle() {
   for (const excluded of ['super_secret_jwt_key_change_in_production', 'DEV ONLY', 'test-host-id', 'test-player-id', 'pnpm seed', 'dev-login']) {
     assert(!js.includes(excluded), `Production bundle leaked ${excluded}`);
   }
-  assert(js.includes('No hay cuestionarios disponibles. Contacta al administrador.'));
+  assert(js.includes('Aún no tienes cuestionarios. Crea uno con preguntas de Verdadero/Falso para iniciar una partida.'));
   console.log('PASS producción: sin IDs, instrucciones seed, ruta dev-login, botones ni clave pública de demo; estado vacío genérico.');
 }
 

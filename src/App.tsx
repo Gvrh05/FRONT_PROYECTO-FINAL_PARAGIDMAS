@@ -33,9 +33,9 @@ function DevLoginPage() {
 
 function LoginPage() {
   const navigate = useNavigate()
-  return <SessionProvider><div className="auth-page">
+  return <div className="auth-page">
     <LoginForm onSuccess={() => navigate('/dashboard', { replace: true })} />
-  </div></SessionProvider>
+  </div>
 }
 
 function Layout() {
@@ -68,16 +68,16 @@ function PlayerLobbyRoute() {
 
 function QuizListPage() {
   const navigate = useNavigate()
-  return <SessionProvider><QuizList
+  return <QuizList
     onCreate={() => navigate('/quizzes/new')}
     onOpen={(quizId) => navigate(`/quizzes/${quizId}`)}
     onEdit={(quiz) => navigate(`/quizzes/${quiz.id}/edit`)}
-  /></SessionProvider>
+  />
 }
 
 function QuizFormPage() {
   const { quizId } = useParams()
-  return <SessionProvider><QuizFormRoute key={quizId ?? 'new'} quizId={quizId} /></SessionProvider>
+  return <QuizFormRoute key={quizId ?? 'new'} quizId={quizId} />
 }
 
 function QuizFormRoute({ quizId }: { quizId?: string }) {
@@ -106,22 +106,22 @@ function QuizFormRoute({ quizId }: { quizId?: string }) {
 function QuizDetailPage() {
   const { quizId = '' } = useParams()
   const navigate = useNavigate()
-  return <SessionProvider><QuizDetail key={quizId} quizId={quizId}
+  return <QuizDetail key={quizId} quizId={quizId}
     onBack={() => navigate('/quizzes')}
     onEdit={(quiz) => navigate(`/quizzes/${quiz.id}/edit`)}
-  /></SessionProvider>
+  />
 }
 
 function CreateGamePanelPage() {
-  return <SessionProvider><CreateGamePanel /></SessionProvider>
+  return <CreateGamePanel />
 }
 
 function ResultsPanelPage() {
-  return <SessionProvider><ResultsPanel /></SessionProvider>
+  return <ResultsPanel />
 }
 
 export default function App() {
-  return <Routes><Route element={<Layout />}>
+  return <SessionProvider><Routes><Route element={<Layout />}>
     <Route index element={<Navigate to="/dashboard" replace />} />
     <Route path="login" element={<LoginPage />} />
     {import.meta.env.DEV && <Route path="dev-login" element={<DevLoginPage />} />}
@@ -139,5 +139,5 @@ export default function App() {
       <Route path="results" element={<ResultsPanelPage />} />
     </Route>
     <Route path="*" element={<section className="card"><h1>Página no encontrada</h1><Link to="/">Volver al inicio</Link></section>} />
-  </Route></Routes>
+  </Route></Routes></SessionProvider>
 }

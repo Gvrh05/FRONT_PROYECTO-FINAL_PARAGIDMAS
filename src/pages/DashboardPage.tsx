@@ -6,7 +6,7 @@ import { QuizForm } from '../components/QuizForm'
 import { QuizList } from '../components/QuizList'
 import { CreateGamePanel } from '../components/CreateGamePanel'
 import { ResultsPanel } from '../components/ResultsPanel'
-import { SessionProvider, useSession } from '../session/session'
+import { useSession } from '../session/session'
 import type { QuizSummary } from '../types'
 
 type View =
@@ -84,5 +84,5 @@ function AuthoringApp() {
 }
 
 export function DashboardPage() {
-  return <SessionProvider><AuthoringApp /></SessionProvider>
+  return <AuthoringApp />
 }

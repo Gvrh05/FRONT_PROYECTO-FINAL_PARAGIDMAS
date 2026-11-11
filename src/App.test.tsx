@@ -4,6 +4,12 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { MemoryRouter } from 'react-router-dom'
+import { AuthProvider } from './auth/AuthContext'
+
+function renderApp() {
+  return render(<MemoryRouter><AuthProvider><App /></AuthProvider></MemoryRouter>)
+}
 
 describe('flujo principal de autoría', () => {
   afterEach(() => vi.restoreAllMocks())
@@ -40,9 +46,8 @@ describe('flujo principal de autoría', () => {
     })
 
     const user = userEvent.setup()
-    render(<App />)
-    expect(screen.getByRole('heading', { name: /Convierte cada clase/ })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
+    renderApp()
+    expect(await screen.findByRole('heading', { name: 'Profelink Kahoot' })).toBeInTheDocument()
     await user.type(screen.getByLabelText('Usuario'), 'docente')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
@@ -60,6 +65,9 @@ describe('flujo principal de autoría', () => {
     expect(await screen.findByRole('heading', { name: 'Ciencias' })).toBeInTheDocument()
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Preguntas' })).toBeInTheDocument())
     expect(screen.getByText(/todav/)).toBeInTheDocument()
+    expect(localStorage.getItem('token')).toBe('test-token')
+    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    expect(await screen.findByRole('heading', { name: 'Profelink Kahoot' })).toBeInTheDocument()
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
     created.forEach(({ mock }) => mock.restore())
@@ -89,14 +97,14 @@ describe('flujo principal de autoría', () => {
     })
 
     const user = userEvent.setup()
-    render(<App />)
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
+    renderApp()
     await user.type(screen.getByLabelText('Usuario'), 'docente')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
-    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    const retry = await screen.findByRole('button', { name: 'Reintentar' })
+    expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.queryByText('Todavía no tienes cuestionarios.')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+    await user.click(retry)
     expect(await screen.findByText('Todavía no tienes cuestionarios.')).toBeInTheDocument()
     mocks.forEach((mock) => mock.restore())
   })
@@ -140,14 +148,14 @@ describe('flujo principal de autoría', () => {
     })
 
     const user = userEvent.setup()
-    render(<App />)
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
+    renderApp()
     await user.type(screen.getByLabelText('Usuario'), 'docente1')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
     await waitFor(() => expect(listCount).toBe(1))
 
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    await screen.findByRole('heading', { name: 'Profelink Kahoot' })
     await user.type(screen.getByLabelText('Usuario'), 'docente2')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))
@@ -161,6 +169,7 @@ describe('flujo principal de autoría', () => {
     expect(screen.queryByText('Dato de sesión anterior')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    await screen.findByRole('heading', { name: 'Profelink Kahoot' })
     await user.type(screen.getByLabelText('Usuario'), 'docente3')
     await user.type(screen.getByLabelText('Contraseña'), 'secreta')
     await user.click(screen.getByRole('button', { name: 'Ingresar' }))

@@ -13,6 +13,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    maxWorkers: 2,
+    testTimeout: 15000,
     env: {
       VITE_API_URL: 'http://localhost:3000/kahoot-api',
       VITE_AUTH_API_URL: 'http://localhost:3001/auth',
