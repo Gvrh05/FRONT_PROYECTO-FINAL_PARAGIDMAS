@@ -50,7 +50,7 @@ const origin = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace
 export const http = axios.create({ baseURL: `${origin}/kahoot-api`, timeout: 15000 })
 
 http.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
+  const token = sessionStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -59,7 +59,7 @@ http.interceptors.response.use((response) => response, (error: unknown) => {
   if (axios.isCancel(error)) return Promise.reject(error)
   if (axios.isAxiosError(error)) {
     const status = error.response?.status
-    const currentToken = localStorage.getItem('token')
+    const currentToken = sessionStorage.getItem('token')
     // An old request must not clear a newer session selected while it was pending.
     if (status === 401 && (!currentToken || error.config?.headers?.Authorization === `Bearer ${currentToken}`)) expireAuth()
     // Translate statusCode/errors, never render the backend's raw JSON or stack.
