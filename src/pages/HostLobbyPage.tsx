@@ -34,7 +34,8 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
     finally { if (alive.current) setBusy(false) }
   }
 
-  return <section className="card">
+  return <section className="card reference-lobby glass-premium">
+    <div className="reference-lobby-art" aria-hidden="true"><img src="/getanyui/graduation-cap.svg" alt="" width="40" height="40" /><span>Conecta con tu clase</span></div>
     <p className="eyebrow">Anfitrión · 2 de 2</p><h1>Tu sala está lista</h1>
     <ErrorBanner error={error || (session && !isHost ? new AppError('', 403) : null)} />
     {loading && <p role="status">Cargando la sala…</p>}

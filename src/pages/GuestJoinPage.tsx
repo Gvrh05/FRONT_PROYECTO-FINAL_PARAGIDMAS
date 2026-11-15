@@ -36,7 +36,7 @@ function GuestInvitation({ invitationId }: { invitationId: string }) {
     return () => controller.abort()
   }, [invitationId])
   if (credential) return <GuestGame credential={credential} onLeave={() => { disconnectGameSocket(); sessionStorage.removeItem(key); setCredential(null) }} />
-  return <main className="container"><section className="card"><h1>{invitation?.name || 'Entrar a la partida'}</h1>
+  return <main className="container reference-guest"><section className="card glass-premium"><img className="reference-guest-logo" src="/getanyui/profelinkicon.png" alt="ProfeLink" width="64" height="64" /><p className="eyebrow">Aprendemos juntos</p><h1>{invitation?.name || 'Entrar a la partida'}</h1>
     {error && <p role="alert">{error}</p>}
     {invitation && invitation.status !== 'LOBBY' ? <p>Esta sala ya inició o finalizó. No admite nuevos participantes.</p> : <form onSubmit={(event) => {
       event.preventDefault()
@@ -56,7 +56,7 @@ function GuestInvitation({ invitationId }: { invitationId: string }) {
 
 function GuestGame({ credential, onLeave }: { credential: Credential; onLeave: () => void }) {
   const { session, connected, error, round, finished, pending, send } = useSessionLobby(credential.roomCode, credential.guestToken)
-  return <main className="container"><section className="card"><h1>Sala {credential.roomCode}</h1><p>{credential.username}</p>
+  return <main className="container reference-guest"><section className="card glass-premium"><div className="reference-lobby-art" aria-hidden="true"><img src="/getanyui/graduation-cap.svg" alt="" width="40" height="40" /><span>Tu clase en vivo</span></div><h1>Sala {credential.roomCode}</h1><p>{credential.username}</p>
     <p role="status">{connected ? 'Conectado' : 'Reconectando…'}</p><ErrorBanner error={error} />
     {finished ? <FinalScores scores={finished.scores} /> : round ? <LiveRoundPanel round={round} connected={connected} pending={pending} onAnswer={(answer) => send('submit-answer', round.questionId, answer)} /> : <p>Espera al anfitrión.</p>}
     {session && <ParticipantList participants={session.participants} hostId={session.hostId} />}

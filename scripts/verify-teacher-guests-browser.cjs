@@ -85,8 +85,8 @@ async function main() {
   assert(await demoDelete.first().isDisabled());
   const demoCard = host.locator('li.quiz-item').filter({ hasText: 'Demo · solo lectura' });
   await demoCard.getByRole('button', { name: 'Abrir', exact: true }).click();
-  await host.locator('img').first().waitFor();
-  await host.waitForFunction(() => [...document.querySelectorAll('img')].length === 10 && [...document.querySelectorAll('img')].every((image) => image.complete && image.naturalWidth > 0));
+  await host.locator('.question-image img').first().waitFor();
+  await host.waitForFunction(() => [...document.querySelectorAll('.question-image img')].length === 10 && [...document.querySelectorAll('.question-image img')].every((image) => image.complete && image.naturalWidth > 0));
   assert.deepEqual(errors, []);
   console.log('PASS browser: MASTER creates teacher without session replacement, demo controls, account switch/logout, protected users, local QR/link, anonymous mobile guest, lobby, answer and reload');
 }

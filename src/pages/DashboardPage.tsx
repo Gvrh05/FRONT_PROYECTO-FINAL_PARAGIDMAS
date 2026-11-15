@@ -30,10 +30,10 @@ function Workspace() {
   }
 
   return (
-    <div className="dashboard-shell">
+    <div className="dashboard-shell reference-dashboard">
       <aside className="sidebar" aria-label="Navegación principal">
         <a className="brand" href="#inicio" onClick={(event) => { event.preventDefault(); navigate('quizzes') }}>
-          <span className="brand-mark">P</span><span>Profelink<span className="brand-light">Kahoot</span></span>
+          <img className="brand-mark" src="/getanyui/profelinkicon.png" alt="" width="40" height="40" /><span>Profelink<span className="brand-light">Kahoot</span></span>
         </a>
         <p className="sidebar-label">Espacio de trabajo</p>
         <nav className="sidebar-nav">
@@ -51,6 +51,7 @@ function Workspace() {
       <main className="dashboard-main">
         <header className="dashboard-topbar"><span>Panel de control</span><span className="online-indicator">Sesión activa</span></header>
         <div className="dashboard-content">
+          <section className="reference-welcome" aria-label="Bienvenida"><p className="eyebrow">Tu comunidad de aprendizaje</p><h1>¡Hola, {session.user.username}!</h1><p>Aquí tienes tus cuestionarios y las actividades más importantes para tu próxima clase.</p><span className="reference-pill">Tu aula, conectada</span></section>
           {section === 'quizzes' ? (
             <>
               {view.name === 'list' ? <QuizList onCreate={() => setView({ name: 'create' })} onOpen={(quizId) => setView({ name: 'detail', quizId })} onEdit={(quiz) => setView({ name: 'edit', quiz })} /> : null}

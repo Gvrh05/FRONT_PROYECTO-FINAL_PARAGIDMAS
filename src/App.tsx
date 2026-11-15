@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { GuestJoinPage } from './pages/GuestJoinPage'
+import { RegisterPage } from './pages/RegisterPage'
 import { UsersPage } from './pages/UsersPage'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { useAuth } from './auth/useAuth'
@@ -35,8 +36,11 @@ function DevLoginPage() {
 
 function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   return <div className="auth-page">
+    {location.state?.registered && <p role="status">Perfil creado. Inicia sesión para jugar.</p>}
     <LoginForm onSuccess={() => navigate('/dashboard', { replace: true })} />
+    <Link to="/register">Crear perfil</Link>
   </div>
 }
 
@@ -45,7 +49,7 @@ function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   return <>
-    <header className="site-header"><Link className="brand" to="/">Quiz en vivo <span>Punto 3</span></Link>
+    <header className="site-header glass-premium"><Link className="brand reference-brand" to="/"><img src="/getanyui/profelinkicon.png" alt="" width="44" height="44" /><span className="reference-brand-copy">ProfeLink<small>Aprende. Comparte. Conecta.</small></span></Link>
       <nav aria-label="Principal">
         {token ? <><Link to="/dashboard">Dashboard</Link><Link to="/quizzes">Quizzes</Link><Link to="/host/create">Crear sala</Link><Link to="/join">Unirse</Link><button className="secondary" onClick={() => {
           if (location.pathname.startsWith('/host/lobby/') && !window.confirm('Cerrar sesión interrumpe temporalmente tu control de la sala, sin terminarla. Puedes volver a entrar. ¿Continuar?')) return
@@ -56,7 +60,7 @@ function Layout() {
       </nav>
     </header>
     <main className="container">{user && <p className="identity">{user.name || user.sub}</p>}<Outlet /></main>
-    <footer>Verdadero / Falso · EIF400 · Sala de juego</footer>
+    <footer className="reference-footer"><img src="/getanyui/graduation-cap.svg" alt="" width="24" height="24" /><span>ProfeLink · Tu aula, conectada en tiempo real.</span><small>Verdadero / Falso · EIF400 · Sala de juego</small></footer>
   </>
 }
 
@@ -130,6 +134,7 @@ export default function App() {
   return <SessionProvider><Routes><Route path="join/:invitationId" element={<GuestJoinPage />} /><Route element={<Layout />}>
     <Route index element={<Navigate to="/dashboard" replace />} />
     <Route path="login" element={<LoginPage />} />
+    <Route path="register" element={<RegisterPage />} />
     {import.meta.env.DEV && <Route path="dev-login" element={<DevLoginPage />} />}
     <Route element={<ProtectedRoute />}>
       <Route path="users" element={<UsersPage />} />

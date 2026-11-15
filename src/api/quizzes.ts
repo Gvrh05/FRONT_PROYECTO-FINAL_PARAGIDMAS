@@ -34,6 +34,11 @@ export async function createQuiz(
   return data
 }
 
+export async function createPokemonQuiz(client: AxiosInstance): Promise<QuizSummary> {
+  const { data } = await client.post<QuizSummary>(`${base}/pokemon`)
+  return data
+}
+
 export async function updateQuiz(
   client: AxiosInstance,
   id: string,

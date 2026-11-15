@@ -1,5 +1,8 @@
 # Profelink Kahoot — autoría web y Punto 3
 
+Despliegue actual con registro y juego público: [Netlify + Railway](docs/netlify.md).
+Las secciones históricas del Punto 3 más abajo describen etapas anteriores.
+
 Aplicación React con landing, autenticación, dashboard para administrar quizzes,
 y una sala de juego en vivo. La autoría permite crear y mantener cuestionarios;
 el Punto 3 permite crear salas, unirse, observar participantes y comenzar una
@@ -353,3 +356,12 @@ y firewall manualmente. Los enlaces QR nunca llevan tokens y se generan localmen
 Para publicación en Internet usar HTTPS. `localhost` solo funciona en el equipo local.
 
 Validación: `pnpm build`, `pnpm lint`, `pnpm test` y `pnpm verify:production`.
+
+## Despliegue del frontend en Netlify
+
+El archivo `netlify.toml` publica `dist` y sirve las rutas de React.
+Antes de compilar en Netlify, definir `VITE_AUTH_API_URL` y `VITE_API_URL`
+con las URLs HTTPS de Auth y de la API. Definir `VITE_WS_URL` con el origen
+HTTPS de la API, sin `/kahoot-api`, y `VITE_PUBLIC_WEB_URL` con el origen
+de Netlify. En ambos servicios configurar `CORS_ORIGIN` con ese mismo
+origen. Los cambios de variables de Vite requieren volver a compilar.

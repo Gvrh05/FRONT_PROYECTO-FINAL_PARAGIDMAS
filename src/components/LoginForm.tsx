@@ -34,8 +34,10 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   }
 
   return (
-    <main className="login">
-      <section className="card" aria-labelledby="login-title">
+    <main className="login reference-auth">
+      <section className="card glass-premium" aria-labelledby="login-title">
+        <div className="reference-auth-icon" aria-hidden="true"><img src="/getanyui/profelinkicon.png" alt="" width="64" height="64" /></div>
+        <p className="eyebrow">Tu espacio para aprender</p>
         <h1 id="login-title">Profelink Kahoot</h1>
         <p className="muted">Administra tus cuestionarios y preguntas.</p>
         <form onSubmit={submit} noValidate>
