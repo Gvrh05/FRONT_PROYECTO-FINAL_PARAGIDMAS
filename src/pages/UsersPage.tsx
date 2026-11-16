@@ -26,6 +26,7 @@ function UsersManager() {
   const [mode, setMode] = useState<'create' | 'edit' | 'password'>('create')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordVisible, setPasswordVisible] = useState(false)
   const generation = session!.generation
   const api = useMemo(() => createHttp({ baseURL: AUTH_API_URL, getToken: () => isCurrent(generation) ? session!.accessToken : null, onUnauthorized: () => { if (isCurrent(generation)) logout() } }), [generation, session, isCurrent, logout])
   useEffect(() => {
@@ -59,7 +60,16 @@ function UsersManager() {
       void mutate(() => mode === 'create' ? api.post('/users', { username: username.trim(), password }) : mode === 'edit' ? api.patch(`/users/${selected!.id}`, { username: username.trim() }) : api.post(`/users/${selected!.id}/reset-password`, { password }))
     }}><h2>{mode === 'create' ? 'Crear profesor' : mode === 'edit' ? 'Editar usuario' : `Restablecer contraseña: ${selected?.username}`}</h2>
       {mode !== 'password' && <label>Nombre de usuario<input required value={username} onChange={(event) => setUsername(event.target.value)} disabled={pending} autoComplete="off" /></label>}
-      {mode !== 'edit' && <label>Contraseña<input type="password" required value={password} onChange={(event) => setPassword(event.target.value)} disabled={pending} autoComplete="new-password" /></label>}
+      {mode !== 'edit' && <><label htmlFor="user-password">Contraseña</label><div className="password-field">
+        <input id="user-password" className="password-input" type={passwordVisible ? 'text' : 'password'} required value={password} onChange={(event) => setPassword(event.target.value)} disabled={pending} autoComplete="new-password" />
+        <button className="password-toggle" type="button" aria-label={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={passwordVisible} onClick={() => setPasswordVisible((visible) => !visible)} disabled={pending}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+            <circle cx="12" cy="12" r="3" />
+            {passwordVisible && <path d="m3 3 18 18" />}
+          </svg>
+        </button>
+      </div></>}
       <button disabled={pending || (mode !== 'password' && !username.trim())}>Guardar</button>
       {selected && <button type="button" disabled={pending} onClick={() => { setMode('create'); setSelected(null); setUsername(''); setPassword('') }}>Cancelar</button>}
     </form>

@@ -3,12 +3,12 @@
    No exported HTML scripts, tracker code, external fonts or application logic. */
 :root {
   color-scheme: dark;
-  --ref-bg: #080b0e;
-  --ref-panel: #121c25;
+  --ref-bg: oklch(14.5% .005 249.72);
+  --ref-panel: rgba(30, 41, 59, .5);
   --ref-raised: #1e293b;
-  --ref-text: #f8fafc;
-  --ref-muted: #a9b5c5;
-  --ref-border: rgb(255 255 255 / 12%);
+  --ref-text: oklch(98.5% 0 0);
+  --ref-muted: oklch(70.8% .005 252.37);
+  --ref-border: rgba(255, 255, 255, .1);
   --ref-blue: #3b82f6;
   --ref-violet: #8b5cf6;
   --ink: #f8fafc;
@@ -20,7 +20,7 @@
   color: var(--ref-text);
   background: var(--ref-bg);
 }
-body { background: radial-gradient(ellipse at 85% 0, #172142 0, transparent 40%), var(--ref-bg); color: var(--ref-text); }
+body { background: var(--ref-bg); color: var(--ref-text); }
 #root { min-height: 100vh; }
 a { color: #93c5fd; }
 a:hover { color: #c4b5fd; }

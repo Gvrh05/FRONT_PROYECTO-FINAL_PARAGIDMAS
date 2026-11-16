@@ -149,7 +149,7 @@ async function main() {
       assert.equal(response.status, 200);
       return response.json();
     };
-    assert.equal(await cdp.evaluate(host, `Array.from(document.querySelectorAll('button')).find(e => e.textContent === 'Iniciar partida').disabled`), true);
+    assert.equal(await cdp.evaluate(host, `Array.from(document.querySelectorAll('button')).find(e => e.textContent === 'Comenzar Partida').disabled`), true);
     assert.equal(handshakes.get(host), 1);
     console.log(`PASS host: selector available-quizzes, sala ${roomCode}, host solo no habilita inicio; StrictMode = 1 conexión.`);
 
@@ -166,18 +166,18 @@ async function main() {
     await cdp.input(player, 'player-name', 'Jugador demo');
     await cdp.click(player, 'Unirse');
     await cdp.wait(player, `${online} && !!document.querySelector('[data-testid="participants"]')`, 'player conectado');
-    await cdp.wait(host, `Array.from(document.querySelectorAll('button')).some(e => e.textContent === 'Iniciar partida' && !e.disabled)`, 'inicio habilitado por otro conectado');
+    await cdp.wait(host, `Array.from(document.querySelectorAll('button')).some(e => e.textContent === 'Comenzar Partida' && !e.disabled)`, 'inicio habilitado por otro conectado');
     assert.equal(handshakes.get(player), 1);
     assert.equal((await api('/participants')).length, 2);
     console.log('PASS player: dos perfiles con JWT client-side, errores legibles, 2 participantes; StrictMode = 1 conexión.');
 
     await cdp.click(player, 'Salir y buscar otra sala', 'a');
-    await cdp.wait(host, `Array.from(document.querySelectorAll('button')).some(e => e.textContent === 'Iniciar partida' && e.disabled)`, 'cleanup al abandonar lobby');
+    await cdp.wait(host, `Array.from(document.querySelectorAll('button')).some(e => e.textContent === 'Comenzar Partida' && e.disabled)`, 'cleanup al abandonar lobby');
     assert.equal((await api('/participants')).length, 1);
     await cdp.input(player, 'room-code', roomCode);
     await cdp.click(player, 'Unirse');
     await cdp.wait(player, online, 'rejoin después de SPA cleanup');
-    await cdp.wait(host, `Array.from(document.querySelectorAll('button')).some(e => e.textContent === 'Iniciar partida' && !e.disabled)`, 'jugador vuelve a estar conectado');
+    await cdp.wait(host, `Array.from(document.querySelectorAll('button')).some(e => e.textContent === 'Comenzar Partida' && !e.disabled)`, 'jugador vuelve a estar conectado');
     assert.equal((await api('/participants')).length, 2);
     console.log('PASS cleanup SPA: salida retira presencia y deshabilita inicio; rejoin restaura una sola identidad.');
 
@@ -192,8 +192,8 @@ async function main() {
     await cdp.send('Page.reload', {}, player);
     const pausedRequest = await Promise.race([pausedResponse, delay(45000).then(() => { throw new Error('Stale GET was not intercepted'); })]);
     await cdp.wait(player, online, 'reconexión aunque GET esté pendiente');
-    await cdp.wait(host, `Array.from(document.querySelectorAll('button')).some(e => e.textContent === 'Iniciar partida' && !e.disabled)`, 'host puede iniciar');
-    await cdp.click(host, 'Iniciar partida');
+    await cdp.wait(host, `Array.from(document.querySelectorAll('button')).some(e => e.textContent === 'Comenzar Partida' && !e.disabled)`, 'host puede iniciar');
+    await cdp.click(host, 'Comenzar Partida');
     await cdp.wait(host, inProgress, 'host IN_PROGRESS');
     await cdp.wait(player, inProgress, 'player IN_PROGRESS');
     await cdp.send('Fetch.continueResponse', { requestId: pausedRequest }, player);

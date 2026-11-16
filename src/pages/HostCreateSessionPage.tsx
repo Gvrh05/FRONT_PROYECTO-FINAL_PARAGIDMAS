@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { createGameSession, listAvailableQuizzes, quizIdSchema } from '../api/gameSessions'
 import type { AvailableQuiz } from '../api/gameSessions'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { AvatarSelector, savedAvatar } from '../components/AvatarSelector'
 
 export function HostCreateSessionPage() {
   const navigate = useNavigate()
@@ -12,6 +13,7 @@ export function HostCreateSessionPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const [avatarId, setAvatarId] = useState(savedAvatar)
   const alive = useRef(false)
   useEffect(() => {
     alive.current = true
@@ -33,6 +35,7 @@ export function HostCreateSessionPage() {
     setError(null)
     try {
       const session = await createGameSession(selected)
+      sessionStorage.setItem('kahoot:avatar', String(avatarId))
       if (alive.current) navigate(`/host/lobby/${session.roomCode}`)
     } catch (failure) { if (alive.current) setError(failure) }
     finally { if (alive.current) setBusy(false) }
@@ -48,6 +51,7 @@ export function HostCreateSessionPage() {
         <select id="quiz" value={selected} disabled={busy} onChange={(event) => setSelected(event.target.value)}>
           {quizzes.map((quiz) => <option key={quiz.id} value={quiz.id}>{quiz.title}</option>)}
         </select>
+        <AvatarSelector value={avatarId} onChange={setAvatarId} disabled={busy} />
         <button type="submit" disabled={busy || !selected}>{busy ? 'Creando sala…' : 'Crear sala'}</button>
       </form>}
   </section>

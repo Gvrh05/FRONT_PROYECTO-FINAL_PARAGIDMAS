@@ -8,7 +8,7 @@ import { useAuth } from '../auth/useAuth'
 import { leaseGameSocket } from './socket'
 
 /** Mount with a roomCode key (see App routes) so no room can display another's state. */
-export function useSessionLobby(roomCode: string, guestToken?: string, loadHostSnapshot = true) {
+export function useSessionLobby(roomCode: string, guestToken?: string, loadHostSnapshot = true, avatarId?: number) {
   const { token: accountToken } = useAuth()
   const token = guestToken ?? accountToken
   const [session, setSession] = useState<SessionSnapshot | null>(null)
@@ -18,6 +18,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
   const [finished, setFinished] = useState<z.infer<typeof finishSchema>>()
   const [pending, setPending] = useState(false)
   const sendRef = useRef<(event: string, questionId: string, answer?: boolean) => void>(() => {})
+  const readyRef = useRef<(ready: boolean) => void>(() => {})
   const leaseRef = useRef<symbol | null>(null)
   const lastStartedAt = useRef(0)
   const startedEvent = useRef<{ sessionId: string; startedAt: string } | null>(null)
@@ -62,7 +63,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
       if (!active()) return
       setConnected(true)
       // ALWAYS join after every connect, even if GET already lists this identity.
-      socket.emit('join-session', { roomCode })
+       socket.emit('join-session', { roomCode, ...(avatarId !== undefined && { avatarId }) })
     }
     const onState = (payload: unknown) => {
       if (!active()) return
@@ -133,6 +134,16 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
       setError(null)
       socket.emit(event, { roomCode, questionId, ...(answer !== undefined && { answer }) })
     }
+    readyRef.current = (ready) => {
+      if (!active() || !socket.connected) return
+      setError(null)
+      socket.emit('set-ready', { roomCode, ready })
+    }
+    const onProgress = (payload: unknown) => {
+      const result = z.object({ roomCode: roomCodeSchema, game: liveRoundSchema }).safeParse(payload)
+      if (active() && result.success && result.data.roomCode === roomCode) applyRound(result.data.game)
+    }
+    socket.on('answer-progress', onProgress)
     socket.on('question-opened', onRound)
     socket.on('question-closed', onRound)
     socket.on('round-result', onRound)
@@ -156,6 +167,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
     return () => {
       if (active()) leaseRef.current = null
       controller.abort()
+      socket.off('answer-progress', onProgress)
       socket.off('question-opened', onRound)
       socket.off('question-closed', onRound)
       socket.off('round-result', onRound)
@@ -170,8 +182,8 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
       socket.off('connect_error', onConnectError)
       lease.release()
     }
-  }, [roomCode, token, guestToken, loadHostSnapshot])
+  }, [roomCode, token, guestToken, loadHostSnapshot, avatarId])
 
   const invalid = !roomCodeSchema.safeParse(roomCode).success
-  return { session, connected, round, finished, pending, send: (event: string, questionId: string, answer?: boolean) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }
+  return { session, connected, round, finished, pending, setReady: (ready: boolean) => readyRef.current(ready), send: (event: string, questionId: string, answer?: boolean) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }
 }

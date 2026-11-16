@@ -2,6 +2,8 @@ import './LiveRoundPanel.css'
 import { useEffect, useState } from 'react'
 import { API_ORIGIN } from '../api/config'
 import type { LiveRound } from '../api/gameSessions'
+import { Podium } from './Podium'
+import type { PodiumScore } from './Podium'
 
 interface Props {
   round: LiveRound
@@ -28,6 +30,7 @@ export function LiveRoundPanel({ round, connected, pending, host, onAnswer, onNe
       <span>Pregunta {round.position} de {round.total}</span>
       <strong role="timer">{round.closed ? 'Tiempo agotado' : remaining + ' s'}</strong>
     </div>
+    {round.votesReceived !== undefined && round.eligiblePlayers !== undefined && <div className="vote-counter" role="status" aria-live="polite"><strong>Votos recibidos: {round.votesReceived} / {round.eligiblePlayers}</strong><progress aria-label="Votos recibidos" max={Math.max(1, round.eligiblePlayers)} value={round.votesReceived} /></div>}
     <h2 id="live-question">{round.questionText}</h2>
     {round.imageUrl && <img className="round-image" src={new URL(round.imageUrl, API_ORIGIN).href} alt="Imagen de la pregunta" />}
     {round.closed ? <>
@@ -48,9 +51,9 @@ export function LiveRoundPanel({ round, connected, pending, host, onAnswer, onNe
   </section>
 }
 
-export function FinalScores({ scores }: { scores: { playerName: string; score: number; rank: number }[] }) {
+export function FinalScores({ scores }: { scores: PodiumScore[] }) {
   return <section className="live-round" aria-labelledby="final-scores">
     <h2 id="final-scores">Clasificación final</h2>
-    <ul>{scores.map(({ playerName, score, rank }, index) => <li key={index}>{rank}. {playerName} · {score} {score === 1 ? 'punto' : 'puntos'}</li>)}</ul>
+    <Podium scores={scores} />
   </section>
 }

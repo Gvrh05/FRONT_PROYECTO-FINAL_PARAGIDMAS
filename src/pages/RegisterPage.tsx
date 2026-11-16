@@ -9,6 +9,7 @@ export function RegisterPage() {
   const navigate = useNavigate()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
+  const [passwordVisible, setPasswordVisible] = useState(false)
 
   async function register(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -37,7 +38,16 @@ export function RegisterPage() {
       <input id="register-username" name="username" autoComplete="username" required pattern="[A-Za-z0-9_]{3,15}" aria-describedby="username-rules" disabled={pending} />
       <small id="username-rules">Usa de 3 a 15 letras, números o guiones bajos.</small>
       <label htmlFor="register-password">Contraseña</label>
-      <input id="register-password" name="password" type="password" autoComplete="new-password" required minLength={8} maxLength={72} disabled={pending} />
+      <div className="password-field">
+        <input id="register-password" className="password-input" name="password" type={passwordVisible ? 'text' : 'password'} autoComplete="new-password" required minLength={8} maxLength={72} disabled={pending} />
+        <button className="password-toggle" type="button" aria-label={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={passwordVisible} onClick={() => setPasswordVisible((visible) => !visible)} disabled={pending}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+            <circle cx="12" cy="12" r="3" />
+            {passwordVisible && <path d="m3 3 18 18" />}
+          </svg>
+        </button>
+      </div>
       <button type="submit" disabled={pending}>{pending ? 'Creando perfil…' : 'Crear perfil'}</button>
     </form>
     {error && <p role="alert">{error}</p>}

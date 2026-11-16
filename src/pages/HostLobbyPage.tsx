@@ -9,10 +9,12 @@ import { ParticipantList } from '../components/ParticipantList'
 import { RoomCodeBadge } from '../components/RoomCodeBadge'
 import { useSessionLobby } from '../realtime/useSessionLobby'
 import { InvitationLink } from '../components/InvitationLink'
+import { savedAvatar } from '../components/AvatarSelector'
 
 export function HostLobbyPage({ roomCode }: { roomCode: string }) {
   const { user } = useAuth()
-  const { session, connected, error, setError, applyStarted, loading, round, finished, pending, send } = useSessionLobby(roomCode)
+  const [avatarId] = useState(savedAvatar)
+  const { session, connected, error, setError, applyStarted, loading, round, finished, pending, send } = useSessionLobby(roomCode, undefined, true, avatarId)
   const [busy, setBusy] = useState(false)
   const alive = useRef(false)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
@@ -21,6 +23,9 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
   const hasOtherConnectedPlayer = session?.participants.some((p) => p.userId !== session.hostId && p.connected) ?? false
   const isHost = !!session && user?.sub === session.hostId
   const canStart = isHost && connected && hasOtherConnectedPlayer && session?.status === 'LOBBY' && !busy
+  const players = session?.participants.filter((player) => player.userId !== session.hostId) ?? []
+  const readyCount = players.filter((player) => player.connected && player.ready).length
+  const allReady = players.length > 0 && readyCount === players.length
 
   async function start() {
     if (!canStart) return
@@ -41,15 +46,18 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
     {loading && <p role="status">Cargando la sala…</p>}
     {session && <>
       <RoomCodeBadge roomCode={session.roomCode} />
-      {isHost && session.invitationId && <InvitationLink invitationId={session.invitationId} />}
+      {isHost && session.status === 'LOBBY' && session.invitationId && <InvitationLink invitationId={session.invitationId} />}
       <p className="connection" role="status">{connected ? 'Conexión en vivo activa' : 'Reconectando…'}</p>
       <p className="status" data-testid="session-status" role="status">{finished || session.status === 'FINISHED' ? 'La sala ha finalizado' : session.status === 'IN_PROGRESS' ? 'Partida en curso' : 'En lobby'}</p>
-      <ParticipantList participants={session.participants} hostId={session.hostId} />
+      <div className="game-layout"><div className="game-stage">
       {session.status === 'LOBBY' && <>
         {!hasOtherConnectedPlayer && <p>Para iniciar, comparte el código con alguien que entre con otra cuenta. Si estás probando en el mismo equipo, abre una ventana privada e inicia sesión allí con la cuenta del jugador.</p>}
-        <button type="button" disabled={!canStart} onClick={() => void start()}>{busy ? 'Iniciando…' : 'Iniciar partida'}</button>
+        <div className="lobby-welcome"><span className="lobby-owl" aria-hidden="true">🦉</span><h2>¡Preparados para aprender!</h2><p role="status">Listos: {readyCount} / {players.length}</p><p>{allReady ? 'Todos están listos. ¡Vamos a jugar!' : 'Los invitados pueden marcarse listos. También puedes forzar el inicio.'}</p></div>
+        <button className="start-game-button" type="button" disabled={!canStart} onClick={() => void start()}>{busy ? 'Iniciando…' : 'Comenzar Partida'}</button>
+        {!allReady && canStart && <small>Comenzar ahora forzará el inicio aunque falten jugadores por prepararse.</small>}
       </>}
       {finished ? <FinalScores scores={finished.scores} /> : isHost && round && <LiveRoundPanel round={round} connected={connected} host pending={pending} onNext={() => send('next-question', round.questionId)} />}
+      </div><aside className="game-roster" aria-label="Jugadores de la sala"><ParticipantList participants={session.participants} hostId={session.hostId} inLobby={session.status === 'LOBBY' && !finished} /></aside></div>
     </>}
     <Link to="/host/create">Crear otra sala</Link>
   </section>

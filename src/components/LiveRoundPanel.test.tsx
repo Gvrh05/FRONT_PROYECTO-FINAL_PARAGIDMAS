@@ -16,6 +16,13 @@ const question: LiveRound = {
 }
 
 describe('partida en vivo', () => {
+  it('actualiza el contador y la barra con los votos enviados por el servidor', () => {
+    const { rerender } = render(<LiveRoundPanel round={{ ...question, votesReceived: 0, eligiblePlayers: 5 }} connected pending={false} />)
+    expect(screen.getByText('Votos recibidos: 0 / 5')).toBeVisible()
+    rerender(<LiveRoundPanel round={{ ...question, votesReceived: 3, eligiblePlayers: 5 }} connected pending={false} />)
+    expect(screen.getByText('Votos recibidos: 3 / 5')).toBeVisible()
+    expect(screen.getByRole('progressbar', { name: 'Votos recibidos' })).toHaveAttribute('value', '3')
+  })
   it('permite responder Falso y deshabilita el envío al confirmar', () => {
     const onAnswer = vi.fn()
     const { rerender } = render(<LiveRoundPanel round={question} connected pending={false} onAnswer={onAnswer} />)
