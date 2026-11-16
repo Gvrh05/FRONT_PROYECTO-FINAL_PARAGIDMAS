@@ -93,6 +93,12 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
           {error ?? notice ?? ''}
         </div>
       </section>
+      <aside className="login-visual" aria-label="ProfeLink: aprende y conecta">
+        <span className="login-visual-kicker">EL CONOCIMIENTO NOS CONECTA</span>
+        <div className="login-owl-orbit"><div className="login-orbit-ring" aria-hidden="true" /><img className="login-official-owl" src="/getanyui/profelinkicon.png" alt="Búho oficial de ProfeLink con lentes, libro y bombillo de idea" width="460" height="460" /><span className="login-orbit-star login-orbit-star-one" aria-hidden="true">✦</span><span className="login-orbit-star login-orbit-star-two" aria-hidden="true">✧</span></div>
+        <h2>Grandes ideas.<br /><span>Clases extraordinarias.</span></h2>
+        <p>Crea, comparte y aprende en comunidad.<br />Tu aula, conectada en tiempo real.</p>
+      </aside>
       </div>
     </main>
   )
