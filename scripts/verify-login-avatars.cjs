@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const origin = process.env.VERIFY_ORIGIN || 'http://localhost:5173';
-const labels = ['académico', 'musical', 'real', 'espacial', 'estrella', 'lector', 'artista', 'veloz', 'nocturno', 'brillante'];
+const labels = ['clásico', 'ninja', 'doctor', 'graduado', 'gamer', 'chef', 'superhéroe', 'detective', 'mago', 'músico'];
 async function main() {
   const config = Object.fromEntries(fs.readFileSync(process.env.VERIFY_ENV_FILE, 'utf8').split(/\r?\n/).filter(line => /^[A-Z_]+=/.test(line)).map(line => { const index = line.indexOf('='); return [line.slice(0, index), line.slice(index + 1)]; }));
   assert(config.DEMO_USER_PASSWORD, 'Missing verification password');

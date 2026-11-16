@@ -9,10 +9,10 @@ describe('experiencia de sala', () => {
     const select = vi.fn()
     render(<AvatarSelector value={2} onChange={select} />)
     expect(screen.getAllByRole('button')).toHaveLength(10)
-    expect(screen.getByRole('button', { name: 'Búho real' })).toHaveAttribute('aria-pressed', 'true')
-    fireEvent.click(screen.getByRole('button', { name: 'Búho espacial' }))
+    expect(screen.getByRole('button', { name: 'Búho doctor' })).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Búho graduado' }))
     expect(select).toHaveBeenCalledWith(3)
-    expect(screen.getByRole('button', { name: 'Búho espacial' })).toHaveAttribute('type', 'button')
+    expect(screen.getByRole('button', { name: 'Búho graduado' })).toHaveAttribute('type', 'button')
   })
 
   it('muestra avatar, preparación y puntos sin incluir preguntas en las tarjetas', () => {
@@ -23,7 +23,7 @@ describe('experiencia de sala', () => {
     ]} />)
     expect(screen.getByText('✓ Listo')).toBeVisible()
     expect(screen.getByText('2 pts')).toBeVisible()
-    expect(screen.getByRole('img', { name: 'Búho espacial' })).toBeVisible()
+    expect(screen.getByRole('img', { name: 'Búho graduado' })).toBeVisible()
     expect(screen.getByText('Desconectado')).toBeVisible()
     expect(screen.getAllByRole('listitem')).toHaveLength(3)
   })

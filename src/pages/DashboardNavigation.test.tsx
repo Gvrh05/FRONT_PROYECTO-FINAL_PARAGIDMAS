@@ -15,6 +15,13 @@ beforeEach(() => { vi.clearAllMocks(); mocks.role = 'MASTER' })
 it('mantiene navegación, perfil y logout en el sidebar sin el header interno', () => {
   const { container } = render(<MemoryRouter><DashboardPage /></MemoryRouter>)
   const sidebar = screen.getByRole('complementary', { name: 'Navegación principal' })
+  const actions = within(sidebar).getAllByRole('button')
+  expect(actions).toHaveLength(6)
+  for (const action of actions) {
+    expect(action).toHaveClass('sidebar-action')
+    expect(action.querySelector('svg.sidebar-icon')).not.toBeNull()
+    expect(action.querySelector('.sidebar-button-label')).not.toBeNull()
+  }
   expect(container.querySelector('.dashboard-topbar')).toBeNull()
   expect(within(sidebar).getByText('Docente', { selector: 'strong' })).toBeVisible()
   expect(screen.getByText('Listado de prueba')).toBeVisible()

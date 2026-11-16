@@ -10,6 +10,7 @@ import { useSession } from '../session/session'
 import type { QuizSummary } from '../types'
 import { UsersPage } from './UsersPage'
 import { JoinSessionPage } from './JoinSessionPage'
+import { SidebarIcon } from '../components/SidebarIcon'
 
 type View =
   | { name: 'list' }
@@ -36,18 +37,17 @@ function Workspace({ initialSection = 'quizzes' }: { initialSection?: Section })
         <a className="brand" href="#inicio" onClick={(event) => { event.preventDefault(); navigate('quizzes') }}>
           <img className="brand-mark" src="/getanyui/profelinkicon.png" alt="" width="40" height="40" /><span>Profelink<span className="brand-light">Kahoot</span></span>
         </a>
-        <p className="sidebar-label">Espacio de trabajo</p>
         <nav className="sidebar-nav">
-          <button disabled={session.user.role !== 'MASTER'} title={session.user.role === 'MASTER' ? 'Administrar usuarios' : 'Disponible para cuentas MASTER'} aria-pressed={section === 'users'} className={section === 'users' ? 'active' : ''} onClick={() => navigate('users')}>Usuarios</button>
-          <button aria-pressed={section === 'quizzes'} className={section === 'quizzes' ? 'active' : ''} onClick={() => navigate('quizzes')}><span aria-hidden="true">▦</span> Quices</button>
-          <button aria-pressed={section === 'create-game'} className={section === 'create-game' ? 'active' : ''} onClick={() => navigate('create-game')}><span aria-hidden="true">▶</span> Crear partida</button>
-          <button aria-pressed={section === 'results'} className={section === 'results' ? 'active' : ''} onClick={() => navigate('results')}><span aria-hidden="true">▤</span> Resultados</button>
-          <button aria-pressed={section === 'join'} className={section === 'join' ? 'active' : ''} onClick={() => navigate('join')}>Unirse a Sala</button>
+          <button aria-pressed={section === 'quizzes'} className={`sidebar-action${section === 'quizzes' ? ' active' : ''}`} onClick={() => navigate('quizzes')}><SidebarIcon name="quizzes" /><span className="sidebar-button-label">Quices</span></button>
+          <button aria-pressed={section === 'create-game'} className={`sidebar-action${section === 'create-game' ? ' active' : ''}`} onClick={() => navigate('create-game')}><SidebarIcon name="create" /><span className="sidebar-button-label">Crear partida</span></button>
+          <button aria-pressed={section === 'results'} className={`sidebar-action${section === 'results' ? ' active' : ''}`} onClick={() => navigate('results')}><SidebarIcon name="results" /><span className="sidebar-button-label">Resultados</span></button>
+          <button disabled={session.user.role !== 'MASTER'} title={session.user.role === 'MASTER' ? 'Administrar usuarios' : 'Disponible para cuentas MASTER'} aria-pressed={section === 'users'} className={`sidebar-action${section === 'users' ? ' active' : ''}`} onClick={() => navigate('users')}><SidebarIcon name="users" /><span className="sidebar-button-label">Usuarios</span></button>
+          <button aria-pressed={section === 'join'} className={`sidebar-action${section === 'join' ? ' active' : ''}`} onClick={() => navigate('join')}><SidebarIcon name="join" /><span className="sidebar-button-label">Unirse a Sala</span></button>
         </nav>
         <div className="sidebar-account">
           <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
           <div className="account-copy"><strong>{session.user.username}</strong><small>Docente</small></div>
-          <button className="logout-button" aria-label="Cerrar sesión" onClick={() => logout()}>Cerrar sesión</button>
+          <button className="sidebar-action" aria-label="Cerrar sesión" onClick={() => logout()}><SidebarIcon name="logout" /><span className="sidebar-button-label">Cerrar sesión</span></button>
         </div>
       </aside>
       <main className="dashboard-main">

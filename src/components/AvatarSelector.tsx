@@ -1,27 +1,27 @@
 import { OwlAvatar as LogoOwlAvatar } from './OwlAvatar'
 
 export const owlAvatars = [
-  { label: 'Búho académico', color: '#1e3a8a' },
-  { label: 'Búho musical', color: '#4c1d95' },
-  { label: 'Búho real', color: '#713f12' },
-  { label: 'Búho espacial', color: '#164e63' },
-  { label: 'Búho estrella', color: '#854d0e' },
-  { label: 'Búho lector', color: '#14532d' },
-  { label: 'Búho artista', color: '#831843' },
-  { label: 'Búho veloz', color: '#312e81' },
-  { label: 'Búho nocturno', color: '#334155' },
-  { label: 'Búho brillante', color: '#115e59' },
+  { label: 'Búho clásico', name: 'Clásico' },
+  { label: 'Búho ninja', name: 'Ninja' },
+  { label: 'Búho doctor', name: 'Doctor' },
+  { label: 'Búho graduado', name: 'Graduado' },
+  { label: 'Búho gamer', name: 'Gamer' },
+  { label: 'Búho chef', name: 'Chef' },
+  { label: 'Búho superhéroe', name: 'Superhéroe' },
+  { label: 'Búho detective', name: 'Detective' },
+  { label: 'Búho mago', name: 'Mago' },
+  { label: 'Búho músico', name: 'Músico' },
 ]
 
 export function OwlAvatar({ avatarId = 0 }: { avatarId?: number }) {
   const avatar = owlAvatars[avatarId] ?? owlAvatars[0]
   const variant = owlAvatars[avatarId] ? avatarId + 1 : 1
-  return <span className="owl-avatar" style={{ backgroundColor: avatar.color }}><LogoOwlAvatar variant={variant} label={avatar.label} /></span>
+  return <span className="owl-avatar"><LogoOwlAvatar variant={variant} label={avatar.label} /></span>
 }
 
 export function AvatarSelector({ value, onChange, disabled = false }: { value: number; onChange: (id: number) => void; disabled?: boolean }) {
   return <fieldset className="avatar-selector" disabled={disabled}><legend>Elige tu búho</legend>
-    <div className="avatar-options">{owlAvatars.map((avatar, id) => <button key={id} type="button" aria-label={avatar.label} aria-pressed={value === id} onClick={() => onChange(id)}><OwlAvatar avatarId={id} />{value === id && <span className="avatar-check" aria-hidden="true">✓</span>}</button>)}</div>
+    <div className="avatar-options">{owlAvatars.map((avatar, id) => <button key={id} type="button" aria-label={avatar.label} aria-pressed={value === id} onClick={() => onChange(id)}><OwlAvatar avatarId={id} /><span className="avatar-theme-name">{avatar.name}</span>{value === id && <span className="avatar-check" aria-hidden="true">✓</span>}</button>)}</div>
   </fieldset>
 }
 
