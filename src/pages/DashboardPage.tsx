@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import '../App.css'
 import { LoginForm } from '../components/LoginForm'
 import { QuizDetail } from '../components/QuizDetail'
@@ -9,6 +8,8 @@ import { CreateGamePanel } from '../components/CreateGamePanel'
 import { ResultsPanel } from '../components/ResultsPanel'
 import { useSession } from '../session/session'
 import type { QuizSummary } from '../types'
+import { UsersPage } from './UsersPage'
+import { JoinSessionPage } from './JoinSessionPage'
 
 type View =
   | { name: 'list' }
@@ -16,12 +17,12 @@ type View =
   | { name: 'create' }
   | { name: 'edit'; quiz: QuizSummary }
 
-type Section = 'quizzes' | 'create-game' | 'results'
+type Section = 'quizzes' | 'create-game' | 'results' | 'users' | 'join'
 
-function Workspace() {
+function Workspace({ initialSection = 'quizzes' }: { initialSection?: Section }) {
   const { session, logout } = useSession()
   const [view, setView] = useState<View>({ name: 'list' })
-  const [section, setSection] = useState<Section>('quizzes')
+  const [section, setSection] = useState<Section>(initialSection)
   if (!session) return null
 
   function navigate(next: Section) {
@@ -37,11 +38,11 @@ function Workspace() {
         </a>
         <p className="sidebar-label">Espacio de trabajo</p>
         <nav className="sidebar-nav">
-          {session.user.role === 'MASTER' && <Link to="/users">Usuarios</Link>}
+          <button disabled={session.user.role !== 'MASTER'} title={session.user.role === 'MASTER' ? 'Administrar usuarios' : 'Disponible para cuentas MASTER'} aria-pressed={section === 'users'} className={section === 'users' ? 'active' : ''} onClick={() => navigate('users')}>Usuarios</button>
           <button aria-pressed={section === 'quizzes'} className={section === 'quizzes' ? 'active' : ''} onClick={() => navigate('quizzes')}><span aria-hidden="true">▦</span> Quices</button>
           <button aria-pressed={section === 'create-game'} className={section === 'create-game' ? 'active' : ''} onClick={() => navigate('create-game')}><span aria-hidden="true">▶</span> Crear partida</button>
           <button aria-pressed={section === 'results'} className={section === 'results' ? 'active' : ''} onClick={() => navigate('results')}><span aria-hidden="true">▤</span> Resultados</button>
-          <Link to="/join">Unirse a una sala</Link>
+          <button aria-pressed={section === 'join'} className={section === 'join' ? 'active' : ''} onClick={() => navigate('join')}>Unirse a Sala</button>
         </nav>
         <div className="sidebar-account">
           <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
@@ -62,17 +63,19 @@ function Workspace() {
           ) : null}
           {section === 'create-game' ? <CreateGamePanel /> : null}
           {section === 'results' ? <ResultsPanel /> : null}
+          {section === 'users' ? <UsersPage /> : null}
+          {section === 'join' ? <JoinSessionPage embedded /> : null}
         </div>
       </main>
     </div>
   )
 }
 
-function AuthoringApp() {
+function AuthoringApp({ initialSection }: { initialSection?: Section }) {
   const { session } = useSession()
   const [showLogin, setShowLogin] = useState(false)
-  if (session) return <Workspace key={session.generation} />
-  if (showLogin) return <div className="auth-page"><button className="back-link" onClick={() => setShowLogin(false)}>← Volver</button><LoginForm /></div>
+  if (session) return <Workspace key={session.generation} initialSection={initialSection} />
+  if (showLogin) return <div className="auth-page"><LoginForm /></div>
   return (
     <main className="landing">
       <nav className="landing-nav"><a className="brand landing-brand" href="#home"><span className="brand-mark">P</span><span>Profelink<span className="brand-light">Kahoot</span></span></a><button className="button-quiet" onClick={() => setShowLogin(true)}>Iniciar sesión</button></nav>
@@ -86,6 +89,6 @@ function AuthoringApp() {
   )
 }
 
-export function DashboardPage() {
-  return <AuthoringApp />
+export function DashboardPage({ initialSection }: { initialSection?: Section }) {
+  return <AuthoringApp initialSection={initialSection} />
 }

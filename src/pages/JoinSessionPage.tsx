@@ -8,7 +8,7 @@ import { AvatarSelector, savedAvatar } from '../components/AvatarSelector'
 
 const formSchema = z.object({ roomCode: roomCodeSchema, name: z.string().trim().max(80, 'El nombre puede tener hasta 80 caracteres.') })
 
-export function JoinSessionPage() {
+export function JoinSessionPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate()
   const [roomCode, setRoomCode] = useState('')
   const [name, setName] = useState('')
@@ -45,6 +45,6 @@ export function JoinSessionPage() {
       <button type="submit" disabled={busy}>{busy ? 'Uniéndote…' : 'Unirse'}</button>
       <AvatarSelector value={avatarId} onChange={setAvatarId} disabled={busy} />
     </form>
-    <Link to="/host/create">¿Eres anfitrión? Crea una sala</Link>
+    {!embedded && <Link to="/host/create">¿Eres anfitrión? Crea una sala</Link>}
   </section>
 }

@@ -14,6 +14,17 @@ function renderApp() {
 describe('flujo principal de autoría', () => {
   afterEach(() => vi.restoreAllMocks())
 
+  it('presenta un login independiente sin navbar, footer ni enlaces de navegación', async () => {
+    renderApp()
+    await screen.findByRole('heading', { name: 'Profelink Kahoot' })
+    expect(screen.queryByRole('banner')).toBeNull()
+    expect(screen.queryByRole('navigation')).toBeNull()
+    expect(screen.queryByRole('contentinfo')).toBeNull()
+    expect(screen.queryByRole('link')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Ingresar' })).toBeVisible()
+    expect(screen.queryByRole('button', { name: /Volver|Acceder/ })).toBeNull()
+  })
+
   it('inicia sesión, muestra lista vacía y abre el cuestionario creado', async () => {
     const originalCreate = axios.create.bind(axios)
     const created: Array<{ baseURL?: string; mock: MockAdapter }> = []

@@ -8,6 +8,7 @@ import './getanyui.css'
 import './getanyui-reference.css'
 import './game-experience.css'
 import './ui-system.css'
+import './results-3d.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

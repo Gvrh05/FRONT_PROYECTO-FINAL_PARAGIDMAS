@@ -5,6 +5,7 @@ import type { LiveRound } from '../api/gameSessions'
 import { Podium } from './Podium'
 import type { PodiumScore } from './Podium'
 import { celebrateAnswer } from './answerConfetti'
+import { RoundResultsChart } from './RoundResultsChart'
 
 interface Props {
   round: LiveRound
@@ -26,18 +27,17 @@ export function LiveRoundPanel({ round, connected, pending, host, onAnswer, onNe
   }, [round.version, round.serverNow])
   const celebrated = useRef<string | null>(null)
   useEffect(() => {
-    if (!host && round.closed && round.answered && (round.points ?? 0) > 0 && celebrated.current !== round.questionId) {
+    if (!host && round.resultReceived && round.closed && round.answered && (round.points ?? 0) > 0 && celebrated.current !== round.questionId) {
       celebrated.current = round.questionId
       celebrateAnswer(true)
     }
-  }, [host, round.closed, round.answered, round.points, round.questionId])
+  }, [host, round.resultReceived, round.closed, round.answered, round.points, round.questionId])
   const elapsed = clock.version === round.version ? clock.now - clock.receivedAt : 0
   const remaining = Math.max(0, Math.ceil((round.closesAt - round.serverNow - elapsed) / 1000))
   const disabled = !connected || pending || round.closed || round.answered || remaining === 0
   function answer(value: boolean) {
     if (disabled || !onAnswer) return
     onAnswer(value)
-    celebrateAnswer()
   }
   return <section className="live-round" aria-labelledby="live-question">
     <div className="round-meta">
@@ -53,6 +53,8 @@ export function LiveRoundPanel({ round, connected, pending, host, onAnswer, onNe
         Respuesta correcta <strong>{round.correctAnswer ? 'Verdadero' : 'Falso'}</strong>
         {!host && round.points !== undefined && <span> · {round.points} {round.points === 1 ? 'punto' : 'puntos'}</span>}
       </p>
+      {!host && round.resultReceived && round.answered && (round.points ?? 0) > 0 && <div key={round.questionId} className="earned-points" role="status"><span className="earned-points-float" aria-hidden="true">+{round.points}</span><strong>+{round.points} puntos</strong><small>¡Respuesta correcta!{round.points === 25 ? ' +5 por velocidad' : ''}</small></div>}
+      {round.voteCounts && <RoundResultsChart counts={round.voteCounts} correctAnswer={round.correctAnswer} />}
       {host && <button type="button" disabled={!connected || pending} onClick={onNext}>
         {round.position === round.total ? 'Finalizar partida' : 'Siguiente pregunta'}
       </button>}

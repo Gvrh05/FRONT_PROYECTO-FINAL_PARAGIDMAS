@@ -16,16 +16,16 @@ async function main() {
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(origin + '/login');
     await page.getByRole('heading', { name: 'Profelink Kahoot', exact: true }).waitFor();
-    await page.locator('.login-official-owl').evaluate(image => image.decode());
+    await page.locator('.login-wordmark img').evaluate(image => image.decode());
     assert(await page.locator('.login-constellations').evaluate(element => getComputedStyle(element).backgroundImage.includes('constellations.svg')));
-    const formBox = await page.locator('.login-form-panel').boundingBox();
-    const visualBox = await page.locator('.login-visual').boundingBox();
-    assert(formBox.x + formBox.width <= visualBox.x, 'Desktop columns must not overlap');
+    assert.equal(await page.getByRole('navigation').count(), 0, 'Login must be independent');
+    assert.equal(await page.getByRole('banner').count(), 0);
+    assert.equal(await page.getByRole('link').count(), 0);
     if (process.env.VERIFY_SCREENSHOT_DIR) await page.screenshot({ path: path.join(process.env.VERIFY_SCREENSHOT_DIR, 'profelink-login-desktop.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Mobile login overflows');
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    assert.equal(await page.locator('.login-official-owl').evaluate(element => getComputedStyle(element).animationName), 'none');
+    assert.equal(await page.locator('.login-constellations').evaluate(element => getComputedStyle(element).animationName), 'none');
     if (process.env.VERIFY_SCREENSHOT_DIR) await page.screenshot({ path: path.join(process.env.VERIFY_SCREENSHOT_DIR, 'profelink-login-mobile.png'), fullPage: true });
     await page.getByLabel('Usuario', { exact: true }).fill(config.DEMO_USER_USERNAME || 'profesor_test');
     await page.getByLabel('Contraseña', { exact: true }).fill(config.DEMO_USER_PASSWORD);
@@ -51,7 +51,7 @@ async function main() {
     await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).first().click();
     assert.equal(await page.evaluate(() => sessionStorage.getItem('token')), null);
     assert.deepEqual(errors, []);
-    console.log('PASS live login/logout, password visibility, official logo, constellation background, desktop columns, mobile layout, reduced motion and all 10 SVG avatar selections. No data created.');
+    console.log('PASS live independent login/logout, password visibility, constellation background, mobile layout, reduced motion and all 10 SVG avatar selections. No data created.');
   } finally { await browser.close(); }
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

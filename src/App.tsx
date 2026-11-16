@@ -2,12 +2,10 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { GuestJoinPage } from './pages/GuestJoinPage'
 import { RegisterPage } from './pages/RegisterPage'
-import { UsersPage } from './pages/UsersPage'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { useAuth } from './auth/useAuth'
 import { HostCreateSessionPage } from './pages/HostCreateSessionPage'
 import { HostLobbyPage } from './pages/HostLobbyPage'
-import { JoinSessionPage } from './pages/JoinSessionPage'
 import { PlayerLobbyPage } from './pages/PlayerLobbyPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { QuizList } from './components/QuizList'
@@ -40,7 +38,6 @@ function LoginPage() {
   return <div className="auth-page">
     {location.state?.registered && <p role="status">Perfil creado. Inicia sesión para jugar.</p>}
     <LoginForm onSuccess={() => navigate('/dashboard', { replace: true })} />
-    <Link to="/register">Crear perfil</Link>
   </div>
 }
 
@@ -48,8 +45,8 @@ function Layout() {
   const { token, user, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  return <div className={`app-layout${location.pathname === '/login' ? ' login-layout' : ''}${location.pathname === '/dashboard' ? ' dashboard-layout' : ''}`}>
-    <header hidden={location.pathname === '/dashboard'} className="site-header glass-premium"><Link className="brand reference-brand" to="/"><img src="/getanyui/profelinkicon.png" alt="" width="44" height="44" /><span className="reference-brand-copy">ProfeLink<small>Aprende. Comparte. Conecta.</small></span></Link>
+  return <div className={`app-layout${['/dashboard', '/users', '/join'].includes(location.pathname) ? ' dashboard-layout' : ''}`}>
+    <header hidden={['/dashboard', '/users', '/join'].includes(location.pathname)} className="site-header glass-premium"><Link className="brand reference-brand" to="/"><img src="/getanyui/profelinkicon.png" alt="" width="44" height="44" /><span className="reference-brand-copy">ProfeLink<small>Aprende. Comparte. Conecta.</small></span></Link>
       <nav aria-label="Principal">
         {token ? <><Link to="/dashboard">Dashboard</Link><Link to="/quizzes">Quizzes</Link><Link to="/host/create">Crear sala</Link><Link to="/join">Unirse</Link><button className="secondary" onClick={() => {
           if (location.pathname.startsWith('/host/lobby/') && !window.confirm('Cerrar sesión interrumpe temporalmente tu control de la sala, sin terminarla. Puedes volver a entrar. ¿Continuar?')) return
@@ -131,18 +128,17 @@ function ResultsPanelPage() {
 }
 
 export default function App() {
-  return <SessionProvider><Routes><Route path="join/:invitationId" element={<GuestJoinPage />} /><Route element={<Layout />}>
+  return <SessionProvider><Routes><Route path="join/:invitationId" element={<GuestJoinPage />} /><Route path="login" element={<div className="app-layout login-layout"><LoginPage /></div>} /><Route element={<Layout />}>
     <Route index element={<Navigate to="/dashboard" replace />} />
-    <Route path="login" element={<LoginPage />} />
     <Route path="register" element={<RegisterPage />} />
     {import.meta.env.DEV && <Route path="dev-login" element={<DevLoginPage />} />}
     <Route element={<ProtectedRoute />}>
-      <Route path="users" element={<UsersPage />} />
+      <Route path="users" element={<DashboardPage key="users" initialSection="users" />} />
       <Route path="host/create" element={<HostCreateSessionPage />} />
       <Route path="host/lobby/:roomCode" element={<HostLobbyRoute />} />
-      <Route path="join" element={<JoinSessionPage />} />
+      <Route path="join" element={<DashboardPage key="join" initialSection="join" />} />
       <Route path="play/lobby/:roomCode" element={<PlayerLobbyRoute />} />
-      <Route path="dashboard" element={<DashboardPage />} />
+      <Route path="dashboard" element={<DashboardPage key="dashboard" />} />
       <Route path="quizzes" element={<QuizListPage />} />
       <Route path="quizzes/new" element={<QuizFormPage />} />
       <Route path="quizzes/:quizId" element={<QuizDetailPage />} />

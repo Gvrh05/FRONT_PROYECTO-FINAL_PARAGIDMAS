@@ -134,6 +134,13 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
       setError(null)
       socket.emit(event, { roomCode, questionId, ...(answer !== undefined && { answer }) })
     }
+    const onResult = (payload: unknown) => {
+      const result = z.object({ roomCode: roomCodeSchema, game: liveRoundSchema }).safeParse(payload)
+      if (!active() || !result.success || result.data.roomCode !== roomCode || !result.data.game.closed) return
+      applyRound({ ...result.data.game, resultReceived: true })
+      setPending(false)
+      setError(null)
+    }
     readyRef.current = (ready) => {
       if (!active() || !socket.connected) return
       setError(null)
@@ -146,7 +153,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
     socket.on('answer-progress', onProgress)
     socket.on('question-opened', onRound)
     socket.on('question-closed', onRound)
-    socket.on('round-result', onRound)
+    socket.on('round-result', onResult)
     socket.on('answer-accepted', onAccepted)
     socket.on('game-finished', onFinished)
     socket.on('connect', onConnect)
@@ -170,7 +177,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
       socket.off('answer-progress', onProgress)
       socket.off('question-opened', onRound)
       socket.off('question-closed', onRound)
-      socket.off('round-result', onRound)
+      socket.off('round-result', onResult)
       socket.off('answer-accepted', onAccepted)
       socket.off('game-finished', onFinished)
       socket.off('connect', onConnect)

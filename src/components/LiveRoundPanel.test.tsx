@@ -58,16 +58,26 @@ describe('partida en vivo', () => {
     expect(screen.getByRole('timer')).toHaveTextContent('Votación cerrada')
   })
 
-  it('celebra la selección y después una respuesta correcta confirmada, una sola vez', () => {
+  it('no celebra al seleccionar, solo un acierto confirmado por round-result, una sola vez', () => {
     const answer = vi.fn()
     const { rerender } = render(<LiveRoundPanel round={question} connected pending={false} onAnswer={answer} />)
     fireEvent.click(screen.getByRole('button', { name: 'Verdadero' }))
     expect(answer).toHaveBeenCalledWith(true)
-    expect(celebrateAnswer).toHaveBeenCalledWith()
-    const result = { ...question, closed: true, answered: true, points: 1, correctAnswer: true }
+    expect(celebrateAnswer).not.toHaveBeenCalled()
+    const result = { ...question, closed: true, answered: true, points: 25, correctAnswer: true, resultReceived: true }
     rerender(<LiveRoundPanel round={result} connected pending={false} onAnswer={answer} />)
     expect(celebrateAnswer).toHaveBeenCalledWith(true)
     rerender(<LiveRoundPanel round={{ ...result, votesReceived: 3 }} connected pending={false} onAnswer={answer} />)
-    expect(celebrateAnswer).toHaveBeenCalledTimes(2)
+    expect(celebrateAnswer).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('+25 puntos')).toBeVisible()
+  })
+
+  it('no celebra respuestas fallidas, ausentes, snapshots ni la vista del host', () => {
+    const { rerender } = render(<LiveRoundPanel round={{ ...question, closed: true, answered: true, points: 0, resultReceived: true }} connected pending={false} />)
+    expect(celebrateAnswer).not.toHaveBeenCalled()
+    rerender(<LiveRoundPanel round={{ ...question, closed: true, answered: false, points: 0, resultReceived: true }} connected pending={false} />)
+    rerender(<LiveRoundPanel round={{ ...question, closed: true, answered: true, points: 25 }} connected pending={false} />)
+    rerender(<LiveRoundPanel round={{ ...question, closed: true, answered: true, points: 25, resultReceived: true }} connected host pending={false} />)
+    expect(celebrateAnswer).not.toHaveBeenCalled()
   })
 })

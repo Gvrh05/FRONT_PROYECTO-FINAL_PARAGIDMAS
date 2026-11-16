@@ -19,12 +19,13 @@ export const liveRoundSchema = z.object({
   serverNow: z.number(), closesAt: z.number(), closed: z.boolean(),
   correctAnswer: z.boolean().optional(), answered: z.boolean().optional(), points: z.number().optional(),
   votesReceived: z.number().int().nonnegative().optional(), eligiblePlayers: z.number().int().nonnegative().optional(),
+  voteCounts: z.object({ true: z.number().int().nonnegative(), false: z.number().int().nonnegative() }).optional(),
 })
 export const finishSchema = z.object({
   roomCode: roomCodeSchema, version: z.number(),
   scores: z.array(z.object({ playerName: z.string(), score: z.number(), rank: z.number(), avatarId: z.number().int().min(0).max(9).optional() })),
 })
-export type LiveRound = z.infer<typeof liveRoundSchema>
+export type LiveRound = z.infer<typeof liveRoundSchema> & { resultReceived?: boolean }
 export const snapshotSchema = sessionSchema.extend({ participants: z.array(participantSchema), game: liveRoundSchema.optional() })
 // Guest snapshots deliberately omit private host and quiz identifiers.
 export const guestSnapshotSchema = snapshotSchema.omit({ hostId: true, quizId: true }).transform((snapshot) => ({ ...snapshot, hostId: '', quizId: '' }))
