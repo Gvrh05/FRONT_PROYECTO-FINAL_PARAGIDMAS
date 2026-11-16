@@ -4,10 +4,10 @@ import { OwlAvatar } from './OwlAvatar'
 import { AvatarSelector } from './AvatarSelector'
 
 describe('búhos SVG ProfeLink', () => {
-  it('dibuja diez temas distintos con lentes, degradados y animación sin recursos externos', () => {
+  it('dibuja quince temas distintos con lentes, degradados y animación sin recursos externos', () => {
     const { container, rerender } = render(<OwlAvatar variant={1} />)
     const drawings = new Set<string>()
-    for (let variant = 1; variant <= 10; variant++) {
+    for (let variant = 1; variant <= 15; variant++) {
       rerender(<OwlAvatar variant={variant} label={`Búho ${variant}`} />)
       const svg = screen.getByRole('img', { name: `Búho ${variant}` })
       expect(svg).toHaveAttribute('viewBox', '0 0 320 320')
@@ -18,20 +18,20 @@ describe('búhos SVG ProfeLink', () => {
       expect(svg.querySelector('image')).toBeNull()
       drawings.add(svg.innerHTML)
     }
-    expect(drawings.size).toBe(10)
+    expect(drawings.size).toBe(15)
     expect(container.querySelectorAll('svg')).toHaveLength(1)
   })
 
-  it('conserva los IDs 0–9 del selector usando variant 1–10', () => {
+  it('conserva los IDs antiguos y amplía el selector a IDs 0–14 / variantes 1–15', () => {
     const { container } = render(<AvatarSelector value={9} onChange={() => {}} />)
-    expect(container.querySelectorAll('svg.profelink-owl')).toHaveLength(10)
+    expect(container.querySelectorAll('svg.profelink-owl')).toHaveLength(15)
     expect(screen.getByRole('button', { name: 'Búho músico' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getAllByRole('img')).toHaveLength(10)
+    expect(screen.getAllByRole('img')).toHaveLength(15)
   })
 
   it('cada tema tiene sus accesorios y todos conservan el fondo transparente', () => {
     const { container } = render(<AvatarSelector value={0} onChange={() => {}} />)
-    for (const selector of ['.owl-idea', '.owl-katana', '.owl-doctor', '.owl-graduate', '.owl-gamepad', '.owl-chef', '.owl-cape', '.owl-detective', '.owl-wand', '.owl-guitar']) expect(container.querySelector(selector)).not.toBeNull()
+    for (const selector of ['.owl-idea', '.owl-katana', '.owl-doctor', '.owl-graduate', '.owl-gamepad', '.owl-chef', '.owl-cape', '.owl-detective', '.owl-wand', '.owl-guitar', '.owl-astronaut', '.owl-pirate', '.owl-zombie', '.owl-cowboy', '.owl-scientist']) expect(container.querySelector(selector)).not.toBeNull()
     for (const wrapper of container.querySelectorAll<HTMLElement>('.owl-avatar')) expect(wrapper.style.backgroundColor).toBe('')
   })
 

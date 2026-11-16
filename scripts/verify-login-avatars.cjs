@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const origin = process.env.VERIFY_ORIGIN || 'http://localhost:5173';
-const labels = ['clásico', 'ninja', 'doctor', 'graduado', 'gamer', 'chef', 'superhéroe', 'detective', 'mago', 'músico'];
+const labels = ['clásico', 'ninja', 'doctor', 'graduado', 'gamer', 'chef', 'superhéroe', 'detective', 'mago', 'músico', 'astronauta', 'pirata', 'zombie', 'vaquero', 'científico loco'];
 async function main() {
   const config = Object.fromEntries(fs.readFileSync(process.env.VERIFY_ENV_FILE, 'utf8').split(/\r?\n/).filter(line => /^[A-Z_]+=/.test(line)).map(line => { const index = line.indexOf('='); return [line.slice(0, index), line.slice(index + 1)]; }));
   assert(config.DEMO_USER_PASSWORD, 'Missing verification password');
@@ -39,7 +39,7 @@ async function main() {
     await page.goto(origin + '/host/create');
     const selector = page.locator('.avatar-selector');
     await selector.waitFor();
-    assert.equal(await selector.locator('svg.profelink-owl').count(), 10);
+    assert.equal(await selector.locator('svg.profelink-owl').count(), 15);
     for (const label of labels) {
       const button = selector.getByRole('button', { name: `Búho ${label}`, exact: true });
       await button.click();
@@ -51,7 +51,7 @@ async function main() {
     await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).first().click();
     assert.equal(await page.evaluate(() => sessionStorage.getItem('token')), null);
     assert.deepEqual(errors, []);
-    console.log('PASS live independent login/logout, password visibility, constellation background, mobile layout, reduced motion and all 10 SVG avatar selections. No data created.');
+    console.log('PASS live independent login/logout, password visibility, constellation background, mobile layout, reduced motion and all 15 SVG avatar selections. No data created.');
   } finally { await browser.close(); }
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

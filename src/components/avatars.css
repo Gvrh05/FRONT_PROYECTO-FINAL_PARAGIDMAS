@@ -13,6 +13,9 @@
 .owl-theme-4 .owl-character, .owl-theme-8 .owl-character { animation-delay: -2.4s; }
 .owl-theme-5 .owl-character, .owl-theme-9 .owl-character { animation-delay: -3.2s; }
 .owl-theme-10 .owl-character { animation-delay: -4s; }
+.owl-theme-11 .owl-character, .owl-theme-14 .owl-character { animation-delay: -1.2s; }
+.owl-theme-12 .owl-character, .owl-theme-15 .owl-character { animation-delay: -2.2s; }
+.owl-theme-13 .owl-eyes { animation-duration: 4.3s; }
 #root .owl-avatar { background: transparent; border: 0; border-radius: 0; }
 #root .avatar-selector .avatar-options { gap: 12px; max-width: 640px; }
 #root .avatar-selector .avatar-options button { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 8px; padding: 10px 6px; background: transparent; border: 2px solid #ffffff12; border-radius: 14px; box-shadow: none; }

@@ -5,10 +5,10 @@ import { ParticipantList } from './ParticipantList'
 import { Podium } from './Podium'
 
 describe('experiencia de sala', () => {
-  it('ofrece diez búhos accesibles y permite elegir sin enviar el formulario', () => {
+  it('ofrece quince búhos accesibles y permite elegir sin enviar el formulario', () => {
     const select = vi.fn()
     render(<AvatarSelector value={2} onChange={select} />)
-    expect(screen.getAllByRole('button')).toHaveLength(10)
+    expect(screen.getAllByRole('button')).toHaveLength(15)
     expect(screen.getByRole('button', { name: 'Búho doctor' })).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(screen.getByRole('button', { name: 'Búho graduado' }))
     expect(select).toHaveBeenCalledWith(3)

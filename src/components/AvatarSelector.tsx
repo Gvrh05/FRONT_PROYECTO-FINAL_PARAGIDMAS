@@ -11,6 +11,11 @@ export const owlAvatars = [
   { label: 'Búho detective', name: 'Detective' },
   { label: 'Búho mago', name: 'Mago' },
   { label: 'Búho músico', name: 'Músico' },
+  { label: 'Búho astronauta', name: 'Astronauta' },
+  { label: 'Búho pirata', name: 'Pirata' },
+  { label: 'Búho zombie', name: 'Zombie' },
+  { label: 'Búho vaquero', name: 'Vaquero' },
+  { label: 'Búho científico loco', name: 'Científico' },
 ]
 
 export function OwlAvatar({ avatarId = 0 }: { avatarId?: number }) {

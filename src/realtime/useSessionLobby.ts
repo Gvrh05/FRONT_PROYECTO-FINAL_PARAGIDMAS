@@ -6,6 +6,8 @@ import { AppError } from '../api/http'
 import { expireAuth } from '../auth/storage'
 import { useAuth } from '../auth/useAuth'
 import { leaseGameSocket } from './socket'
+import { goalKickBaseSchema, goalKickCommandSchema, goalKickEventNames, goalKickStateSchema } from '../features/goal-kick/contracts'
+import type { GoalKickCommand, GoalKickState } from '../features/goal-kick/contracts'
 
 /** Mount with a roomCode key (see App routes) so no room can display another's state. */
 export function useSessionLobby(roomCode: string, guestToken?: string, loadHostSnapshot = true, avatarId?: number) {
@@ -17,6 +19,11 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
   const [round, setRound] = useState<LiveRound>()
   const [finished, setFinished] = useState<z.infer<typeof finishSchema>>()
   const [pending, setPending] = useState(false)
+  const [goalKick, setGoalKick] = useState<GoalKickState>()
+  const [goalKickError, setGoalKickError] = useState('')
+  const [goalKickPending, setGoalKickPending] = useState(false)
+  const goalKickRef = useRef<GoalKickState | undefined>(undefined)
+  const goalKickSendRef = useRef<(command: GoalKickCommand) => void>(() => {})
   const sendRef = useRef<(event: string, questionId: string, answer?: boolean) => void>(() => {})
   const readyRef = useRef<(ready: boolean) => void>(() => {})
   const leaseRef = useRef<symbol | null>(null)
@@ -37,6 +44,60 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
     const controller = new AbortController()
     const lease = leaseGameSocket(token, roomCode, Boolean(guestToken))
     const socket = lease.socket
+    let commandTimer: ReturnType<typeof setTimeout> | undefined
+    const retiredGames = new Set<string>()
+    const acceptGoalKick = (value: unknown, source = 'snapshot') => {
+      const parsed = goalKickStateSchema.safeParse(value)
+      if (!active() || !parsed.success || parsed.data.roomCode !== roomCode || retiredGames.has(parsed.data.gameId)) return
+      const incoming = parsed.data, previous = goalKickRef.current
+      if (previous && (incoming.startedAt < previous.startedAt || (incoming.gameId === previous.gameId && incoming.revision < previous.revision))) return
+      const same = previous?.gameId === incoming.gameId
+      const next: GoalKickState = { ...incoming, receivedAt: performance.now(), resultEventShotId: same ? previous.resultEventShotId : undefined }
+      if (same && incoming.scoreboardVersion < previous.scoreboardVersion) { next.scoreboard = previous.scoreboard; next.scoreboardVersion = previous.scoreboardVersion; next.phase = previous.phase }
+      if (source === 'game:shot-result' && incoming.view === 'player') next.resultEventShotId = incoming.player.lastResult?.shotId
+      goalKickRef.current = next; setGoalKick(next)
+      setGoalKickPending(false); setGoalKickError(''); clearTimeout(commandTimer)
+    }
+    const goalKickListeners = new Map<string, (payload: unknown) => void>()
+    for (const name of ['game:state', 'game:attempt-ready', 'game:shot-accepted', 'game:shot-result']) {
+      const listener = (payload: unknown) => { if (payload && typeof payload === 'object' && 'state' in payload) acceptGoalKick(payload.state, name) }
+      goalKickListeners.set(name, listener); socket.on(name, listener)
+    }
+    const onGoalKickPublic = (payload: unknown) => {
+      const parsed = goalKickBaseSchema.safeParse(payload)
+      const previous = goalKickRef.current
+      if (!active() || !parsed.success || parsed.data.roomCode !== roomCode || retiredGames.has(parsed.data.gameId)) return
+      if (!previous || previous.gameId !== parsed.data.gameId) return
+      if (parsed.data.scoreboardVersion < previous.scoreboardVersion) return
+      const next = { ...previous, ...parsed.data, receivedAt: performance.now() }
+      goalKickRef.current = next; setGoalKick(next)
+    }
+    for (const name of ['game:started', 'game:goal', 'game:scoreboard', 'game:ended']) { goalKickListeners.set(name, onGoalKickPublic); socket.on(name, onGoalKickPublic) }
+    const onGoalKickRestored = (payload: unknown) => {
+      const parsed = z.object({ roomCode: roomCodeSchema, gameId: z.uuid() }).safeParse(payload)
+      if (!active() || !parsed.success || parsed.data.roomCode !== roomCode) return
+      retiredGames.add(parsed.data.gameId)
+      if (goalKickRef.current?.gameId !== parsed.data.gameId) return
+      goalKickRef.current = undefined; setGoalKick(undefined); setGoalKickPending(false); setGoalKickError(''); clearTimeout(commandTimer)
+      setSession(previous => previous ? { ...previous, goalKick: undefined } : previous)
+    }
+    goalKickListeners.set('game:lobby-restored', onGoalKickRestored); socket.on('game:lobby-restored', onGoalKickRestored)
+    const onGoalKickError = (payload: unknown) => {
+      const parsed = z.object({ roomCode: roomCodeSchema, code: z.string(), message: z.string() }).safeParse(payload)
+      if (!active() || !parsed.success || parsed.data.roomCode !== roomCode) return
+      setGoalKickError(parsed.data.message); setGoalKickPending(false); clearTimeout(commandTimer)
+      if (parsed.data.code === 'UNAUTHENTICATED' && !guestToken) expireAuth()
+    }
+    goalKickListeners.set('game:error', onGoalKickError); socket.on('game:error', onGoalKickError)
+    goalKickSendRef.current = (command) => {
+      const parsed = goalKickCommandSchema.safeParse(command)
+      if (!active() || !socket.connected || !parsed.success) { if (active()) setGoalKickError('No hay conexión o el comando no es válido.'); return }
+      const { action, ...fields } = parsed.data
+      setGoalKickPending(true); setGoalKickError('')
+      socket.emit(goalKickEventNames[action], { roomCode, ...fields, ...(action !== 'sync' && { commandId: 'commandId' in fields && fields.commandId ? fields.commandId : crypto.randomUUID() }) })
+      clearTimeout(commandTimer)
+      commandTimer = setTimeout(() => { if (active()) { setGoalKickPending(false); setGoalKickError('Sin confirmación de red. Usa Sincronizar para recuperar tu intento.') } }, 5000)
+    }
     let receivedSnapshot = false
     let latestParticipants: Participant[] | null = null
 
@@ -51,6 +112,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
       })
     }
     const accept = (snapshot: SessionSnapshot) => {
+      if (snapshot.goalKick) acceptGoalKick(snapshot.goalKick)
       if (snapshot.game) applyRound(snapshot.game)
       setPending(false)
       const event = startedEvent.current
@@ -69,6 +131,8 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
       if (!active()) return
       const result = (guestToken ? guestSnapshotSchema : snapshotSchema).safeParse(payload)
       if (!result.success || result.data.roomCode !== roomCode) return
+      // A reconnect may have missed game:lobby-restored while offline.
+      if (!result.data.goalKick && goalKickRef.current) onGoalKickRestored({ roomCode, gameId: goalKickRef.current.gameId })
       receivedSnapshot = true
       latestParticipants = result.data.participants
       accept(result.data)
@@ -100,6 +164,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
     const onDisconnect = (reason: string) => {
       if (!active()) return
       setConnected(false)
+      setGoalKickPending(false)
       setPending(false)
       if (reason === 'io server disconnect') {
         if (!guestToken) expireAuth()
@@ -174,6 +239,8 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
     return () => {
       if (active()) leaseRef.current = null
       controller.abort()
+      clearTimeout(commandTimer)
+      for (const [name, listener] of goalKickListeners) socket.off(name, listener)
       socket.off('answer-progress', onProgress)
       socket.off('question-opened', onRound)
       socket.off('question-closed', onRound)
@@ -192,5 +259,5 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
   }, [roomCode, token, guestToken, loadHostSnapshot, avatarId])
 
   const invalid = !roomCodeSchema.safeParse(roomCode).success
-  return { session, connected, round, finished, pending, setReady: (ready: boolean) => readyRef.current(ready), send: (event: string, questionId: string, answer?: boolean) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }
+  return { session, connected, round, finished, pending, goalKick, goalKickError, goalKickPending, sendGoalKickCommand: (command: GoalKickCommand) => goalKickSendRef.current(command), setReady: (ready: boolean) => readyRef.current(ready), send: (event: string, questionId: string, answer?: boolean) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }
 }

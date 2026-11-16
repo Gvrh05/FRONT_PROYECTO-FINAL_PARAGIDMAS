@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { AuthProvider } from '../auth/AuthContext'
 import { useSessionLobby } from './useSessionLobby'
+import { playerFixture } from '../features/goal-kick/test-fixture'
 
 const state = vi.hoisted(() => ({ listeners: new Map<string, (payload?: unknown) => void>(), emit: vi.fn(), rest: vi.fn(), lease: vi.fn() }))
 vi.mock('../api/gameSessions', async (original) => ({ ...await original<typeof import('../api/gameSessions')>(), getSession: state.rest }))
@@ -61,6 +62,41 @@ it('sincroniza búhos, preparación y votos sin perder respuesta confirmada ni l
   expect(result.current.round).toMatchObject({ resultReceived: true, points: 25, voteCounts: { true: 2, false: 1 } })
   act(() => state.listeners.get('game-finished')?.({ roomCode: '123456', version: 2, scores: [{ playerName: 'Alumno', score: 1, rank: 1, avatarId: 3 }] }))
   expect(result.current.finished?.scores[0].avatarId).toBe(3)
+  unmount()
+  expect(state.listeners.size).toBe(0)
+})
+
+it('recupera el lobby por snapshot si perdió el retorno mientras estaba desconectado', async () => {
+  const { result, unmount } = renderHook(() => useSessionLobby('123456', 'opaque-guest'), { wrapper: AuthProvider })
+  await waitFor(() => expect(state.emit).toHaveBeenCalledWith('join-session', { roomCode: '123456' }))
+  const fixture = playerFixture()
+  act(() => state.listeners.get('game:state')?.({ state: fixture }))
+  act(() => state.listeners.get('disconnect')?.('transport close'))
+  act(() => state.listeners.get('connect')?.())
+  act(() => state.listeners.get('session-state')?.({ sessionId: '123456', roomCode: '123456', status: 'LOBBY', participants: [] }))
+  expect(result.current.goalKick).toBeUndefined()
+  expect(result.current.goalKickPending).toBe(false)
+  act(() => state.listeners.get('game:state')?.({ state: fixture }))
+  expect(result.current.goalKick).toBeUndefined()
+  unmount()
+  expect(state.listeners.size).toBe(0)
+})
+
+it('integra minijuego en el mismo lease, separa versiones y descarta estados retirados', async () => {
+  const { result, unmount } = renderHook(() => useSessionLobby('123456', 'opaque-guest'), { wrapper: AuthProvider })
+  await waitFor(() => expect(state.emit).toHaveBeenCalledWith('join-session', { roomCode: '123456' }))
+  const fixture = playerFixture()
+  act(() => state.listeners.get('game:state')?.({ state: fixture }))
+  expect(result.current.goalKick?.gameId).toBe(fixture.gameId)
+  act(() => result.current.sendGoalKickCommand({ action: 'shoot', gameId: fixture.gameId, attemptId: fixture.player.board.attemptId, aimX: 272, curve: 65 }))
+  expect(state.emit).toHaveBeenCalledWith('game:shoot', expect.objectContaining({ roomCode: '123456', aimX: 272, curve: 65, commandId: expect.any(String) }))
+  act(() => state.listeners.get('game:scoreboard')?.({ ...fixture, scoreboardVersion: 3, scoreboard: [{ ...fixture.scoreboard[0], score: 10, goals: 1 }] }))
+  act(() => state.listeners.get('game:state')?.({ state: { ...fixture, revision: 2 } }))
+  expect(result.current.goalKick?.scoreboard[0].score).toBe(10)
+  act(() => state.listeners.get('game:lobby-restored')?.({ roomCode: '123456', gameId: fixture.gameId }))
+  expect(result.current.goalKick).toBeUndefined()
+  act(() => state.listeners.get('game:state')?.({ state: fixture }))
+  expect(result.current.goalKick).toBeUndefined()
   unmount()
   expect(state.listeners.size).toBe(0)
 })

@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { http } from './http'
+import { goalKickStateSchema } from '../features/goal-kick/contracts'
 
 export const roomCodeSchema = z.string().regex(/^\d{6}$/, 'El código debe tener exactamente 6 dígitos.')
 export const quizIdSchema = z.uuid('Selecciona un cuestionario válido.')
-const participantSchema = z.object({ userId: z.string(), name: z.string(), connected: z.boolean(), avatarId: z.number().int().min(0).max(9).optional(), ready: z.boolean().optional(), score: z.number().optional(), isHost: z.boolean().optional() })
+const participantSchema = z.object({ userId: z.string(), name: z.string(), connected: z.boolean(), avatarId: z.number().int().min(0).max(14).optional(), ready: z.boolean().optional(), score: z.number().optional(), isHost: z.boolean().optional() })
 const sessionSchema = z.object({
   sessionId: roomCodeSchema,
   roomCode: roomCodeSchema,
@@ -23,10 +24,10 @@ export const liveRoundSchema = z.object({
 })
 export const finishSchema = z.object({
   roomCode: roomCodeSchema, version: z.number(),
-  scores: z.array(z.object({ playerName: z.string(), score: z.number(), rank: z.number(), avatarId: z.number().int().min(0).max(9).optional() })),
+  scores: z.array(z.object({ playerName: z.string(), score: z.number(), rank: z.number(), avatarId: z.number().int().min(0).max(14).optional() })),
 })
 export type LiveRound = z.infer<typeof liveRoundSchema> & { resultReceived?: boolean }
-export const snapshotSchema = sessionSchema.extend({ participants: z.array(participantSchema), game: liveRoundSchema.optional() })
+export const snapshotSchema = sessionSchema.extend({ participants: z.array(participantSchema), game: liveRoundSchema.optional(), goalKick: goalKickStateSchema.optional() })
 // Guest snapshots deliberately omit private host and quiz identifiers.
 export const guestSnapshotSchema = snapshotSchema.omit({ hostId: true, quizId: true }).transform((snapshot) => ({ ...snapshot, hostId: '', quizId: '' }))
 export const participantsUpdatedSchema = z.object({ participants: z.array(participantSchema) })

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSession } from '../session/session'
 import './LoginForm.css'
+import { TestCredentialsPanel } from './TestCredentialsPanel'
 
 export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   const { login, notice } = useSession()
@@ -92,6 +93,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         <div role="alert" aria-live="polite" className="alert">
           {error ?? notice ?? ''}
         </div>
+        {(import.meta.env.VITE_EDUCATIONAL_DEMO === 'true' || (import.meta.env.DEV && import.meta.env.VITE_EDUCATIONAL_DEMO !== 'false')) && <TestCredentialsPanel />}
       </section>
       <aside className="login-visual" aria-label="ProfeLink: aprende y conecta">
         <span className="login-visual-kicker">EL CONOCIMIENTO NOS CONECTA</span>
