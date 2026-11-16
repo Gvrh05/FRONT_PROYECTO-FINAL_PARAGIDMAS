@@ -7,6 +7,7 @@ import { AuthProvider } from './auth/AuthContext'
 import './getanyui.css'
 import './getanyui-reference.css'
 import './game-experience.css'
+import './ui-system.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

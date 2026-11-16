@@ -1,0 +1,117 @@
+:root {
+  --ui-primary: #2563eb;
+  --ui-primary-hover: #1d4ed8;
+  --ui-text: #f8fafc;
+  --ui-radius: 12px;
+  --ui-control-height: 46px;
+  --ui-control-shadow: 0 4px 14px #2563eb26;
+}
+/* One base for actions; navigation and icon/picker controls have explicit variants. */
+#root :where(button, .button, .ui-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: var(--ui-control-height);
+  padding: 11px 18px;
+  border: 1px solid #93c5fd40;
+  border-radius: var(--ui-radius);
+  background: var(--ui-primary);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--ui-control-shadow);
+  transition: background-color .18s, border-color .18s, box-shadow .18s, transform .18s;
+}
+#root :where(button, .button, .ui-button):hover:not(:disabled) { background: var(--ui-primary-hover); border-color: #93c5fd90; box-shadow: 0 6px 20px #2563eb38; }
+#root :where(button, .button, .ui-button):active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+#root :where(button):disabled { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; }
+#root :where(button, a, input, select, textarea):focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+#root :where(button.secondary, button.button-quiet, .button-secondary, .back-link) { background: #1e293b; border-color: #ffffff26; box-shadow: none; }
+#root :where(button.secondary, button.button-quiet, .button-secondary, .back-link):hover:not(:disabled) { background: #334155; }
+#root :where(button.danger, .logout-button) { background: #7f1d1d; border-color: #f8717150; box-shadow: none; }
+#root :where(button.danger, .logout-button):hover:not(:disabled) { background: #991b1b; }
+#root .site-header { gap: 24px; }
+#root .site-header nav { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+#root .site-header nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 14px; border: 1px solid transparent; border-radius: 10px; text-decoration: none; color: #cbd5e1; font-size: 14px; font-weight: 600; line-height: 1.4; transition: background-color .18s, color .18s, border-color .18s; }
+#root .site-header nav a:hover, #root .site-header nav a:focus-visible { color: white; background: #3b82f61a; border-color: #60a5fa40; }
+#root .site-header nav button { background: #1e293b; box-shadow: none; border-color: #ffffff26; }
+#root .dashboard-layout > .site-header, #root .dashboard-layout > main > .identity { display: none; }
+#root .dashboard-layout > .container { width: 100%; max-width: none; padding: 0; }
+#root .reference-dashboard.dashboard-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100svh; overflow: visible; }
+#root .reference-dashboard .sidebar { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 24px; padding: 28px 18px 20px; background: #111b2b; border: 0; border-right: 1px solid #ffffff1a; box-shadow: none; overflow-y: auto; }
+#root .reference-dashboard .sidebar-label { display: block; margin: 8px 12px -12px; color: #94a3b8; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+#root .reference-dashboard .sidebar-nav { display: grid; gap: 8px; }
+#root .reference-dashboard .sidebar-nav :where(button, a) { display: flex; align-items: center; justify-content: flex-start; width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: #b7c7dd; font-size: 14px; font-weight: 550; line-height: 1.4; text-decoration: none; box-shadow: none; }
+#root .reference-dashboard .sidebar-nav :where(button, a):hover { color: white; background: #ffffff08; border-color: #ffffff14; box-shadow: none; }
+#root .reference-dashboard .sidebar-nav button.active { color: #bfdbfe; border-color: #60a5fa40; background: #2563eb26; }
+#root .reference-dashboard .sidebar-account { display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 12px; margin: auto 0 0; padding: 20px 0 0; border-top: 1px solid #ffffff1a; background: transparent; }
+#root .reference-dashboard .account-copy { min-width: 0; overflow-wrap: anywhere; }
+#root .reference-dashboard .sidebar-account .logout-button { grid-column: 1 / -1; width: 100%; }
+#root .reference-dashboard .dashboard-content { width: min(1200px, 100%); padding: clamp(24px, 4vw, 56px); }
+#root .avatar-options button { padding: 6px; min-height: 0; background: #0f172a; border: 2px solid transparent; border-radius: 16px; box-shadow: none; }
+#root .avatar-options button:hover { background: #1e293b; border-color: #60a5fa60; }
+#root .avatar-options button[aria-pressed="true"] { border-color: #60a5fa; box-shadow: 0 0 0 3px #3b82f633; }
+#root .password-toggle { min-height: 44px; padding: 10px; color: #475569; background: transparent; border: 0; box-shadow: none; }
+#root .password-toggle:hover:not(:disabled) { background: #dbe3ee; box-shadow: none; color: #1e3a8a; }
+#root .password-toggle:active:not(:disabled) { transform: translateY(-50%); }
+#root .round-actions .trivia-answer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: clamp(130px, 17vw, 190px);
+  border: 2px solid #ffffff36;
+  border-radius: 20px;
+  padding: 24px;
+  background: #1d4ed8;
+  box-shadow: 0 7px 0 #172554, 0 14px 28px #0004;
+  font-size: clamp(24px, 3.5vw, 38px);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#root .round-actions .trivia-answer-true { background: #15803d; box-shadow: 0 7px 0 #14532d, 0 14px 28px #0004; }
+#root .round-actions .trivia-answer-false { background: #be123c; box-shadow: 0 7px 0 #881337, 0 14px 28px #0004; }
+#root .round-actions .trivia-answer:hover:not(:disabled) { transform: translateY(-3px); filter: brightness(1.12); border-color: #ffffffa6; }
+#root .round-actions .trivia-answer:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 2px 0 #0f172a; }
+#root .round-actions .trivia-answer:disabled { opacity: .5; box-shadow: none; filter: none; }
+.trivia-answer-symbol { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #ffffff20; font-size: 34px; }
+.host-round-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin: 20px 0; padding: 18px; border: 1px solid #60a5fa40; border-radius: 14px; background: #1e3a8a26; }
+.host-round-controls p { flex: 1 1 200px; margin: 0; color: #cbd5e1; font-size: 14px; }
+#root .host-close-button { min-height: 52px; background: #1d4ed8; }
+#root .ready-button[aria-pressed="true"] { background: #166534; border-color: #4ade8070; }
+#root .ready-button[aria-pressed="true"]:hover:not(:disabled) { background: #15803d; }
+/* Full-viewport decoration, with only the small form panel floating above it. */
+.login-layout { min-height: 100svh; background: #0b1428; isolation: isolate; }
+#root .login-layout > .container { width: 100%; max-width: none; padding: 0; }
+#root .login-layout .auth-page { padding: 0; background: transparent; }
+#root .login-layout .site-header, #root .login-layout .reference-footer { background: transparent; backdrop-filter: none; box-shadow: none; }
+#root .login.reference-auth.profelink-login, #root .auth-page .login.reference-auth.profelink-login { min-height: calc(100svh - 180px); margin: 0; padding: clamp(24px, 5vw, 64px); border-radius: 0; border: 0; background: transparent; overflow: visible; }
+#root .login-constellations { position: fixed; inset: -8%; background: url('/getanyui/constellations.svg') center / cover, radial-gradient(ellipse at 78% 35%, #1a3563, #101e38 36%, #0b1223 75%); opacity: 1; animation: constellation-drift 32s ease-in-out infinite alternate; }
+@keyframes constellation-drift { from { transform: translate3d(-1%, -1%, 0) scale(1); } to { transform: translate3d(2%, 2%, 0) scale(1.04); } }
+@media (max-width: 800px) {
+  #root .reference-dashboard.dashboard-shell { grid-template-columns: minmax(0, 1fr); }
+  #root .reference-dashboard .sidebar { position: static; height: auto; padding: 20px 16px; gap: 16px; border-right: 0; border-bottom: 1px solid #ffffff1a; }
+  #root .reference-dashboard .sidebar-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #root .reference-dashboard .sidebar-account { grid-template-columns: 40px minmax(0, 1fr) auto; padding-top: 16px; }
+  #root .reference-dashboard .sidebar-account .logout-button { grid-column: auto; width: auto; }
+  #root .reference-dashboard .sidebar-nav :where(button, a) { font-size: 13px; padding: 10px; }
+  #root .site-header nav { gap: 6px; }
+  #root .site-header nav a { padding: 10px; font-size: 13px; }
+}
+@media (max-width: 480px) {
+  #root .round-actions .trivia-answer { min-height: 120px; flex-direction: row; justify-content: flex-start; padding: 20px; font-size: 28px; }
+  #root .reference-dashboard .sidebar-account { grid-template-columns: 40px minmax(0, 1fr); }
+  #root .reference-dashboard .sidebar-account .logout-button { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .login-constellations { animation: none; }
+  #root :where(button, .button, .ui-button), #root .site-header nav a { transition: none; }
+  #root .round-actions .trivia-answer:hover:not(:disabled), #root .round-actions .trivia-answer:active:not(:disabled) { transform: none; }
+}

@@ -48,8 +48,8 @@ function Layout() {
   const { token, user, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  return <>
-    <header className="site-header glass-premium"><Link className="brand reference-brand" to="/"><img src="/getanyui/profelinkicon.png" alt="" width="44" height="44" /><span className="reference-brand-copy">ProfeLink<small>Aprende. Comparte. Conecta.</small></span></Link>
+  return <div className={`app-layout${location.pathname === '/login' ? ' login-layout' : ''}${location.pathname === '/dashboard' ? ' dashboard-layout' : ''}`}>
+    <header hidden={location.pathname === '/dashboard'} className="site-header glass-premium"><Link className="brand reference-brand" to="/"><img src="/getanyui/profelinkicon.png" alt="" width="44" height="44" /><span className="reference-brand-copy">ProfeLink<small>Aprende. Comparte. Conecta.</small></span></Link>
       <nav aria-label="Principal">
         {token ? <><Link to="/dashboard">Dashboard</Link><Link to="/quizzes">Quizzes</Link><Link to="/host/create">Crear sala</Link><Link to="/join">Unirse</Link><button className="secondary" onClick={() => {
           if (location.pathname.startsWith('/host/lobby/') && !window.confirm('Cerrar sesión interrumpe temporalmente tu control de la sala, sin terminarla. Puedes volver a entrar. ¿Continuar?')) return
@@ -61,7 +61,7 @@ function Layout() {
     </header>
     <main className="container">{user && <p className="identity">{user.name || user.sub}</p>}<Outlet /></main>
     <footer className="reference-footer"><img src="/getanyui/graduation-cap.svg" alt="" width="24" height="24" /><span>ProfeLink · Tu aula, conectada en tiempo real.</span><small>Verdadero / Falso · EIF400 · Sala de juego</small></footer>
-  </>
+  </div>
 }
 
 function HostLobbyRoute() {

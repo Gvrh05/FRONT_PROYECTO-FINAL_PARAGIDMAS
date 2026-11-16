@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveRound } from '../api/gameSessions'
 import { LiveRoundPanel } from './LiveRoundPanel'
+import { celebrateAnswer } from './answerConfetti'
+vi.mock('./answerConfetti', () => ({ celebrateAnswer: vi.fn() }))
+beforeEach(() => vi.clearAllMocks())
 
 const question: LiveRound = {
   questionId: 'efed51ad-1c55-4817-a164-c70f679e8001',
@@ -41,5 +44,30 @@ describe('partida en vivo', () => {
     rerender(<LiveRoundPanel round={{ ...question, closed: true, correctAnswer: true }} connected host pending={false} onNext={onNext} />)
     fireEvent.click(screen.getByRole('button', { name: 'Siguiente pregunta' }))
     expect(onNext).toHaveBeenCalledOnce()
+  })
+
+  it('permite al host terminar la votación antes de que se agote el tiempo', () => {
+    const close = vi.fn()
+    const { rerender } = render(<LiveRoundPanel round={question} connected host pending={false} onClose={close} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Terminar votación' }))
+    expect(close).toHaveBeenCalledOnce()
+    rerender(<LiveRoundPanel round={question} connected host pending onClose={close} />)
+    expect(screen.getByRole('button', { name: 'Terminar votación' })).toBeDisabled()
+    rerender(<LiveRoundPanel round={{ ...question, closed: true }} connected host pending={false} onClose={close} />)
+    expect(screen.queryByRole('button', { name: 'Terminar votación' })).toBeNull()
+    expect(screen.getByRole('timer')).toHaveTextContent('Votación cerrada')
+  })
+
+  it('celebra la selección y después una respuesta correcta confirmada, una sola vez', () => {
+    const answer = vi.fn()
+    const { rerender } = render(<LiveRoundPanel round={question} connected pending={false} onAnswer={answer} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Verdadero' }))
+    expect(answer).toHaveBeenCalledWith(true)
+    expect(celebrateAnswer).toHaveBeenCalledWith()
+    const result = { ...question, closed: true, answered: true, points: 1, correctAnswer: true }
+    rerender(<LiveRoundPanel round={result} connected pending={false} onAnswer={answer} />)
+    expect(celebrateAnswer).toHaveBeenCalledWith(true)
+    rerender(<LiveRoundPanel round={{ ...result, votesReceived: 3 }} connected pending={false} onAnswer={answer} />)
+    expect(celebrateAnswer).toHaveBeenCalledTimes(2)
   })
 })

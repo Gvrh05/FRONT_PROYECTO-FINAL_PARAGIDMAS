@@ -56,7 +56,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
         <button className="start-game-button" type="button" disabled={!canStart} onClick={() => void start()}>{busy ? 'Iniciando…' : 'Comenzar Partida'}</button>
         {!allReady && canStart && <small>Comenzar ahora forzará el inicio aunque falten jugadores por prepararse.</small>}
       </>}
-      {finished ? <FinalScores scores={finished.scores} /> : isHost && round && <LiveRoundPanel round={round} connected={connected} host pending={pending} onNext={() => send('next-question', round.questionId)} />}
+      {finished ? <FinalScores scores={finished.scores} /> : isHost && round && <LiveRoundPanel round={round} connected={connected} host pending={pending} onClose={() => send('close-voting', round.questionId)} onNext={() => send('next-question', round.questionId)} />}
       </div><aside className="game-roster" aria-label="Jugadores de la sala"><ParticipantList participants={session.participants} hostId={session.hostId} inLobby={session.status === 'LOBBY' && !finished} /></aside></div>
     </>}
     <Link to="/host/create">Crear otra sala</Link>

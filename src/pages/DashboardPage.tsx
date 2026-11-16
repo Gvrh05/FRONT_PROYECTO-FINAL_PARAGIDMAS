@@ -38,18 +38,18 @@ function Workspace() {
         <p className="sidebar-label">Espacio de trabajo</p>
         <nav className="sidebar-nav">
           {session.user.role === 'MASTER' && <Link to="/users">Usuarios</Link>}
-          <button className={section === 'quizzes' ? 'active' : ''} onClick={() => navigate('quizzes')}><span>▦</span> Quices</button>
-          <button className={section === 'create-game' ? 'active' : ''} onClick={() => navigate('create-game')}><span>▶</span> Crear partida</button>
-          <button className={section === 'results' ? 'active' : ''} onClick={() => navigate('results')}><span>▤</span> Resultados</button>
+          <button aria-pressed={section === 'quizzes'} className={section === 'quizzes' ? 'active' : ''} onClick={() => navigate('quizzes')}><span aria-hidden="true">▦</span> Quices</button>
+          <button aria-pressed={section === 'create-game'} className={section === 'create-game' ? 'active' : ''} onClick={() => navigate('create-game')}><span aria-hidden="true">▶</span> Crear partida</button>
+          <button aria-pressed={section === 'results'} className={section === 'results' ? 'active' : ''} onClick={() => navigate('results')}><span aria-hidden="true">▤</span> Resultados</button>
+          <Link to="/join">Unirse a una sala</Link>
         </nav>
         <div className="sidebar-account">
           <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
           <div className="account-copy"><strong>{session.user.username}</strong><small>Docente</small></div>
-          <button className="logout-button" aria-label="Cerrar sesión del dashboard" onClick={() => logout()}>Cerrar sesión</button>
+          <button className="logout-button" aria-label="Cerrar sesión" onClick={() => logout()}>Cerrar sesión</button>
         </div>
       </aside>
       <main className="dashboard-main">
-        <header className="dashboard-topbar"><span>Panel de control</span><span className="online-indicator">Sesión activa</span></header>
         <div className="dashboard-content">
           <section className="reference-welcome" aria-label="Bienvenida"><p className="eyebrow">Tu comunidad de aprendizaje</p><h1>¡Hola, {session.user.username}!</h1><p>Aquí tienes tus cuestionarios y las actividades más importantes para tu próxima clase.</p><span className="reference-pill">Tu aula, conectada</span></section>
           {section === 'quizzes' ? (
