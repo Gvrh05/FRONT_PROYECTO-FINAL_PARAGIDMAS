@@ -14,13 +14,47 @@ function renderApp() {
 describe('flujo principal de autoría', () => {
   afterEach(() => vi.restoreAllMocks())
 
+  it('devuelve al jugador al formulario de PIN después de registrarse e iniciar sesión', async () => {
+    const register = new MockAdapter(axios)
+    register.onPost('http://localhost:3001/auth/register').reply(201)
+    const originalCreate = axios.create.bind(axios)
+    vi.spyOn(axios, 'create').mockImplementation((config) => {
+      const instance = originalCreate(config)
+      if (config?.baseURL === 'http://localhost:3001/auth') {
+        new MockAdapter(instance).onPost('/login').reply(200, {
+          accessToken: 'test-token',
+          user: { id: 'player-1', username: 'jugador', role: 'PROFESOR', avatarId: 14 },
+        })
+      }
+      return instance
+    })
+    try {
+      const user = userEvent.setup()
+      render(<MemoryRouter initialEntries={['/join?pin=012345']}><AuthProvider><App /></AuthProvider></MemoryRouter>)
+      await user.click(await screen.findByRole('link', { name: 'Crear perfil' }))
+      await user.type(screen.getByLabelText('Usuario'), 'jugador')
+      await user.type(screen.getByLabelText('Contraseña'), 'password-local')
+      await user.click(screen.getByRole('button', { name: 'Búho científico loco' }))
+      await user.click(screen.getByRole('button', { name: 'Crear perfil' }))
+      await screen.findByText('Perfil creado. Inicia sesión para jugar.')
+      expect(JSON.parse(register.history.post[0].data)).toMatchObject({ avatarId: 14 })
+      await user.type(screen.getByLabelText('Usuario'), 'jugador')
+      await user.type(screen.getByLabelText('Contraseña'), 'password-local')
+      await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+      expect(await screen.findByLabelText('Código de sala')).toHaveValue('012345')
+      expect(JSON.parse(sessionStorage.getItem('user')!)).toMatchObject({ avatarId: 14 })
+    } finally {
+      register.restore()
+    }
+  })
+
   it('presenta un login independiente sin navbar, footer ni enlaces de navegación', async () => {
     renderApp()
     await screen.findByRole('heading', { name: 'Profelink Kahoot' })
     expect(screen.queryByRole('banner')).toBeNull()
     expect(screen.queryByRole('navigation')).toBeNull()
     expect(screen.queryByRole('contentinfo')).toBeNull()
-    expect(screen.queryByRole('link')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Crear perfil' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeVisible()
     expect(screen.queryByRole('button', { name: /Volver|Acceder/ })).toBeNull()
   })

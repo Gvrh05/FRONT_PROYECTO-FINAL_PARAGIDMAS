@@ -52,6 +52,7 @@ function readPersistedSession(): LoginResponse | null {
     if (user.role !== 'MASTER' && user.role !== 'PROFESOR') return null
     return { accessToken, user: {
       id,
+      avatarId: typeof user.avatarId === 'number' ? user.avatarId : undefined,
       username: typeof user.username === 'string' ? user.username : typeof user.name === 'string' ? user.name : id,
       role: user.role,
     } }
@@ -93,6 +94,7 @@ function parseLogin(data: unknown): LoginResponse {
   }
   const profile = user as Record<string, unknown>
   return { accessToken, user: { id, username, role,
+    avatarId: typeof profile.avatarId === 'number' ? profile.avatarId : undefined,
     active: typeof profile.active === 'boolean' ? profile.active : undefined,
     isSystem: typeof profile.isSystem === 'boolean' ? profile.isSystem : undefined,
     credentialVersion: typeof profile.credentialVersion === 'number' ? profile.credentialVersion : undefined,

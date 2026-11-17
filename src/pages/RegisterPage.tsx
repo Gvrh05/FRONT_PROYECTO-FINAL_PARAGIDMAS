@@ -1,12 +1,16 @@
 import axios from 'axios'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AUTH_API_URL } from '../api/config'
 import { apiErrorMessage } from '../api/http'
 
+import { AvatarSelector } from '../components/AvatarSelector'
+
 export function RegisterPage() {
   const navigate = useNavigate()
+  const { state } = useLocation()
+  const [avatarId, setAvatarId] = useState(0)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
@@ -21,8 +25,9 @@ export function RegisterPage() {
       await axios.post(`${AUTH_API_URL.replace(/\/$/, '')}/register`, {
         username: String(form.get('username')).trim().toLowerCase(),
         password: form.get('password'),
+        avatarId,
       })
-      navigate('/login', { replace: true, state: { registered: true } })
+      navigate('/login', { replace: true, state: { registered: true, from: state?.from, search: state?.search } })
     } catch (failure) {
       setError(apiErrorMessage(failure))
     } finally {
@@ -48,9 +53,10 @@ export function RegisterPage() {
           </svg>
         </button>
       </div>
+      <AvatarSelector value={avatarId} onChange={setAvatarId} disabled={pending} />
       <button type="submit" disabled={pending}>{pending ? 'Creando perfil…' : 'Crear perfil'}</button>
     </form>
     {error && <p role="alert">{error}</p>}
-    <Link to="/login">Volver a iniciar sesión</Link>
+    <Link to="/login" state={state}>Volver a iniciar sesión</Link>
   </section>
 }

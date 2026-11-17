@@ -1,3 +1,4 @@
+import { CosmicScene } from './CosmicScene'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSession } from '../session/session'
@@ -96,6 +97,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         {(import.meta.env.VITE_EDUCATIONAL_DEMO === 'true' || (import.meta.env.DEV && import.meta.env.VITE_EDUCATIONAL_DEMO !== 'false')) && <TestCredentialsPanel />}
       </section>
       <aside className="login-visual" aria-label="ProfeLink: aprende y conecta">
+        <CosmicScene compact />
         <span className="login-visual-kicker">EL CONOCIMIENTO NOS CONECTA</span>
         <div className="login-owl-orbit"><div className="login-orbit-ring" aria-hidden="true" /><img className="login-official-owl" src="/getanyui/profelinkicon.png" alt="Búho oficial de ProfeLink con lentes, libro y bombillo de idea" width="460" height="460" /><span className="login-orbit-star login-orbit-star-one" aria-hidden="true">✦</span><span className="login-orbit-star login-orbit-star-two" aria-hidden="true">✧</span></div>
         <h2>Grandes ideas.<br /><span>Clases extraordinarias.</span></h2>

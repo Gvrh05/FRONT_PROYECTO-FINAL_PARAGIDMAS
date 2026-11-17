@@ -18,6 +18,9 @@ type View =
   | { name: 'create' }
   | { name: 'edit'; quiz: QuizSummary }
 
+import { CosmicScene } from '../components/CosmicScene'
+import { OwlAvatar } from '../components/AvatarSelector'
+
 type Section = 'quizzes' | 'create-game' | 'results' | 'users' | 'join'
 
 function Workspace({ initialSection = 'quizzes' }: { initialSection?: Section }) {
@@ -45,14 +48,14 @@ function Workspace({ initialSection = 'quizzes' }: { initialSection?: Section })
           <button aria-pressed={section === 'join'} className={`sidebar-action${section === 'join' ? ' active' : ''}`} onClick={() => navigate('join')}><SidebarIcon name="join" /><span className="sidebar-button-label">Unirse a Sala</span></button>
         </nav>
         <div className="sidebar-account">
-          <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
+          <div className="avatar"><OwlAvatar avatarId={session.user.avatarId} /></div>
           <div className="account-copy"><strong>{session.user.username}</strong><small>Docente</small></div>
           <button className="sidebar-action" aria-label="Cerrar sesión" onClick={() => logout()}><SidebarIcon name="logout" /><span className="sidebar-button-label">Cerrar sesión</span></button>
         </div>
       </aside>
       <main className="dashboard-main">
         <div className="dashboard-content">
-          <section className="reference-welcome" aria-label="Bienvenida"><p className="eyebrow">Tu comunidad de aprendizaje</p><h1>¡Hola, {session.user.username}!</h1><p>Aquí tienes tus cuestionarios y las actividades más importantes para tu próxima clase.</p><span className="reference-pill">Tu aula, conectada</span></section>
+          <section className="reference-welcome" aria-label="Bienvenida"><p className="eyebrow">Tu comunidad de aprendizaje</p><h1>¡Hola, {session.user.username}!</h1><p>Aquí tienes tus cuestionarios y las actividades más importantes para tu próxima clase.</p><span className="reference-pill">Tu aula, conectada</span><CosmicScene compact /></section>
           {section === 'quizzes' ? (
             <>
               {view.name === 'list' ? <QuizList onCreate={() => setView({ name: 'create' })} onOpen={(quizId) => setView({ name: 'detail', quizId })} onEdit={(quiz) => setView({ name: 'edit', quiz })} /> : null}

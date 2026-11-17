@@ -17,6 +17,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
   const { user } = useAuth()
   const [avatarId] = useState(savedAvatar)
   const { session, connected, error, setError, applyStarted, loading, round, finished, pending, send, goalKick, goalKickPending, goalKickError, sendGoalKickCommand } = useSessionLobby(roomCode, undefined, true, avatarId)
+  const goalKickEnabled = import.meta.env.VITE_GOAL_KICK_ENABLED === 'true'
   const [busy, setBusy] = useState(false)
   const [activity, setActivity] = useState<'trivia' | 'goal-kick'>('trivia')
   const alive = useRef(false)
@@ -32,7 +33,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
 
   async function start() {
     if (!canStart) return
-    if (activity === 'goal-kick') {
+    if (goalKickEnabled && activity === 'goal-kick') {
       sendGoalKickCommand({ action: 'start' })
       return
     }
@@ -54,6 +55,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
     {session && <>
       <RoomCodeBadge roomCode={session.roomCode} />
       {isHost && !goalKick && session.status === 'LOBBY' && session.invitationId && <InvitationLink invitationId={session.invitationId} />}
+      {isHost && session.status === 'LOBBY' && <Link to={'/join?pin=' + session.roomCode}>Enlace para jugadores con cuenta</Link>}
       <p className="connection" role="status">{connected ? 'Conexión en vivo activa' : 'Reconectando…'}</p>
       <p className="status" data-testid="session-status" role="status">{goalKick ? goalKick.phase === 'PLAYING' ? 'Tiro al Arco en curso' : 'Resultados de Tiro al Arco' : finished || session.status === 'FINISHED' ? 'La sala ha finalizado' : session.status === 'IN_PROGRESS' ? 'Partida en curso' : 'En lobby'}</p>
       <div className="game-layout"><div className="game-stage">
@@ -61,7 +63,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
       {session.status === 'LOBBY' && <>
         {!hasOtherConnectedPlayer && <p>Para iniciar, comparte el código con alguien que entre con otra cuenta. Si estás probando en el mismo equipo, abre una ventana privada e inicia sesión allí con la cuenta del jugador.</p>}
         <div className="lobby-welcome"><span className="lobby-owl" aria-hidden="true">🦉</span><h2>¡Preparados para aprender!</h2><p role="status">Listos: {readyCount} / {players.length}</p><p>{allReady ? 'Todos están listos. ¡Vamos a jugar!' : 'Los invitados pueden marcarse listos. También puedes forzar el inicio.'}</p></div>
-        {isHost && <fieldset className="host-activity-selector" disabled={busy || goalKickPending || !connected}>
+        {goalKickEnabled && isHost && <fieldset className="host-activity-selector" disabled={busy || goalKickPending || !connected}>
           <legend>Elige la actividad</legend>
           <div className="host-activity-options">
             <label className="host-activity-option">

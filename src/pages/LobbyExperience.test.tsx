@@ -27,6 +27,7 @@ const session = { sessionId: '123456', roomCode: '123456', hostId: 'host', statu
 const base = { session, connected: true, loading: false, error: null, setError: vi.fn(), pending: false, send: mocks.send, setReady: mocks.ready, applyStarted: mocks.applyStarted, goalKickPending: false, goalKickError: '', sendGoalKickCommand: mocks.sendGoalKick }
 
 beforeEach(() => {
+  vi.stubEnv('VITE_GOAL_KICK_ENABLED', 'true')
   vi.clearAllMocks()
   sessionStorage.clear()
   mocks.lobby.mockReturnValue(base)

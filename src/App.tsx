@@ -35,9 +35,13 @@ function DevLoginPage() {
 function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const from = location.state?.from === '/join' ? '/join' : '/dashboard'
+  const pin = new URLSearchParams(location.state?.search).get('pin')
+  const search = from === '/join' && pin && /^\d{6}$/.test(pin) ? '?pin=' + pin : ''
   return <div className="auth-page">
     {location.state?.registered && <p role="status">Perfil creado. Inicia sesión para jugar.</p>}
-    <LoginForm onSuccess={() => navigate('/dashboard', { replace: true })} />
+    <LoginForm onSuccess={() => navigate({ pathname: from, search }, { replace: true })} />
+    <Link to="/register" state={{ from, search }}>Crear perfil</Link>
   </div>
 }
 

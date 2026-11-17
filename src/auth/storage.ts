@@ -1,4 +1,5 @@
 export interface AuthUser {
+  avatarId?: number
   sub: string
   name?: string
   email?: string
@@ -12,6 +13,7 @@ function parseUser(value: unknown): AuthUser | null {
   const user = value as Record<string, unknown>
   return {
     sub: value.sub,
+    ...(typeof user.avatarId === 'number' && { avatarId: user.avatarId }),
     ...(typeof user.name === 'string' && { name: user.name }),
     ...(typeof user.email === 'string' && { email: user.email }),
     ...(typeof user.role === 'string' && { role: user.role }),

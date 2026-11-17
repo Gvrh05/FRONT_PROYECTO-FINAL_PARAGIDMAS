@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { expect, it } from 'vitest'
 import { http } from '../api/http'
+import { AuthProvider } from '../auth/AuthContext'
 import { JoinSessionPage } from './JoinSessionPage'
 
 it('entra con el token de su perfil y el PIN sin consultar el estado reservado al anfitrión', async () => {
@@ -15,13 +16,13 @@ it('entra con el token de su perfil y el PIN sin consultar el estado reservado a
   })
   try {
     const user = userEvent.setup()
-    render(<MemoryRouter initialEntries={['/join']}>
+    render(<MemoryRouter initialEntries={['/join?pin=123456']}><AuthProvider>
       <Routes>
         <Route path="/join" element={<JoinSessionPage />} />
         <Route path="/play/lobby/:pin" element={<p>Sala del jugador</p>} />
       </Routes>
-    </MemoryRouter>)
-    await user.type(screen.getByLabelText('Código de sala'), '123456')
+    </AuthProvider></MemoryRouter>)
+    expect(screen.getByLabelText('Código de sala')).toHaveValue('123456')
     await user.click(screen.getByRole('button', { name: 'Unirse' }))
     expect(await screen.findByText('Sala del jugador')).toBeInTheDocument()
     expect(mock.history.get).toHaveLength(0)
