@@ -24,7 +24,7 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
   const [goalKickPending, setGoalKickPending] = useState(false)
   const goalKickRef = useRef<GoalKickState | undefined>(undefined)
   const goalKickSendRef = useRef<(command: GoalKickCommand) => void>(() => {})
-  const sendRef = useRef<(event: string, questionId: string, answer?: boolean) => void>(() => {})
+  const sendRef = useRef<(event: string, questionId: string, answer?: boolean | number) => void>(() => {})
   const readyRef = useRef<(ready: boolean) => void>(() => {})
   const leaseRef = useRef<symbol | null>(null)
   const lastStartedAt = useRef(0)
@@ -259,5 +259,5 @@ export function useSessionLobby(roomCode: string, guestToken?: string, loadHostS
   }, [roomCode, token, guestToken, loadHostSnapshot, avatarId])
 
   const invalid = !roomCodeSchema.safeParse(roomCode).success
-  return { session, connected, round, finished, pending, goalKick, goalKickError, goalKickPending, sendGoalKickCommand: (command: GoalKickCommand) => goalKickSendRef.current(command), setReady: (ready: boolean) => readyRef.current(ready), send: (event: string, questionId: string, answer?: boolean) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }
+  return { session, connected, round, finished, pending, goalKick, goalKickError, goalKickPending, sendGoalKickCommand: (command: GoalKickCommand) => goalKickSendRef.current(command), setReady: (ready: boolean) => readyRef.current(ready), send: (event: string, questionId: string, answer?: boolean | number) => sendRef.current(event, questionId, answer), error: invalid ? new AppError('El código de sala debe tener exactamente 6 dígitos.') : error, setError, applyStarted, loading: !session && !error && !invalid }
 }

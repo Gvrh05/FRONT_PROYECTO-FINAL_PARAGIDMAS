@@ -70,3 +70,6 @@
   .login-visual p { font-size: 13px; }
 }
 @media (prefers-reduced-motion: reduce) { .login-official-owl, .login-orbit-star { animation: none; } }
+
+.login-register { display: block; width: 100%; margin-top: 12px; padding: 12px; border: 1px solid #7668b5; border-radius: 12px; color: #ddd4ff; text-align: center; font-weight: 700; }
+.login-register:hover { background: #7668b52b; }

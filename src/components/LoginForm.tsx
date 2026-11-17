@@ -1,11 +1,12 @@
 import { CosmicScene } from './CosmicScene'
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSession } from '../session/session'
 import './LoginForm.css'
 import { TestCredentialsPanel } from './TestCredentialsPanel'
 
-export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
+export function LoginForm({ onSuccess, registration }: { onSuccess?: () => void; registration?: ReactNode }) {
   const { login, notice } = useSession()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -91,6 +92,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
             {pending ? 'Ingresando…' : 'Ingresar'}
           </button>
         </form>
+        {registration}
         <div role="alert" aria-live="polite" className="alert">
           {error ?? notice ?? ''}
         </div>

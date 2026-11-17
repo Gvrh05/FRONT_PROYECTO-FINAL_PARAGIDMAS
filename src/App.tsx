@@ -40,8 +40,7 @@ function LoginPage() {
   const search = from === '/join' && pin && /^\d{6}$/.test(pin) ? '?pin=' + pin : ''
   return <div className="auth-page">
     {location.state?.registered && <p role="status">Perfil creado. Inicia sesión para jugar.</p>}
-    <LoginForm onSuccess={() => navigate({ pathname: from, search }, { replace: true })} />
-    <Link to="/register" state={{ from, search }}>Crear perfil</Link>
+    <LoginForm registration={<Link className="login-register" to="/register" state={{ from, search }}>Crear cuenta</Link>} onSuccess={() => navigate({ pathname: from, search }, { replace: true })} />
   </div>
 }
 

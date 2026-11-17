@@ -9,3 +9,15 @@
 .round-actions button:first-child:not(:disabled) { background: #126049; }
 .round-actions button:last-child:not(:disabled) { background: #a62d40; }
 .round-result { padding: .75rem; background: #dcecdf; border-radius: 8px; }
+
+.multiple-choice-actions .trivia-answer { min-width: 0; overflow-wrap: anywhere; background: #4434a1; }
+.multiple-choice-actions .trivia-answer:nth-child(2) { background: #17627c; }
+.multiple-choice-actions .trivia-answer:nth-child(3) { background: #22634b; }
+.multiple-choice-actions .trivia-answer:nth-child(4) { background: #893456; }
+.choice-results { list-style: none; padding: 0; display: grid; gap: 8px; }
+.choice-results li { display: flex; justify-content: space-between; gap: 12px; padding: 10px; }
+.choice-results span { white-space: nowrap; }
+@media (max-width: 520px) { .multiple-choice-actions { grid-template-columns: 1fr; } }
+
+.multiple-choice-actions .trivia-answer:nth-child(5) { background: #86511e; }
+.round-points-preview { font-weight: 700; color: inherit; margin-block: .5rem; }

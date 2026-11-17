@@ -31,7 +31,7 @@ describe('flujo principal de autoría', () => {
     try {
       const user = userEvent.setup()
       render(<MemoryRouter initialEntries={['/join?pin=012345']}><AuthProvider><App /></AuthProvider></MemoryRouter>)
-      await user.click(await screen.findByRole('link', { name: 'Crear perfil' }))
+      await user.click(await screen.findByRole('link', { name: 'Crear cuenta' }))
       await user.type(screen.getByLabelText('Usuario'), 'jugador')
       await user.type(screen.getByLabelText('Contraseña'), 'password-local')
       await user.click(screen.getByRole('button', { name: 'Búho científico loco' }))
@@ -54,7 +54,7 @@ describe('flujo principal de autoría', () => {
     expect(screen.queryByRole('banner')).toBeNull()
     expect(screen.queryByRole('navigation')).toBeNull()
     expect(screen.queryByRole('contentinfo')).toBeNull()
-    expect(screen.getByRole('link', { name: 'Crear perfil' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Crear cuenta' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeVisible()
     expect(screen.queryByRole('button', { name: /Volver|Acceder/ })).toBeNull()
   })

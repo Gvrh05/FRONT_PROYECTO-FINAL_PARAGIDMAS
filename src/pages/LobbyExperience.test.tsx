@@ -39,7 +39,7 @@ it('permite al host forzar el inicio conservando la autorización REST y el pane
   const roster = screen.getByRole('complementary', { name: 'Jugadores de la sala' })
   expect(within(roster).getByText('Ada')).toBeVisible()
   expect(screen.getByText('Listos: 0 / 1')).toBeVisible()
-  expect(screen.getByRole('radio', { name: 'Trivia (Verdadero/Falso)' })).toBeChecked()
+  expect(screen.getByRole('radio', { name: 'Trivia' })).toBeChecked()
   const start = screen.getByRole('button', { name: 'Comenzar Partida' })
   expect(start).toBeEnabled()
   expect(roster).not.toContainElement(start)

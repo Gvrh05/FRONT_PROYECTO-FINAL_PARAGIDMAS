@@ -233,7 +233,7 @@ export function QuestionForm({
             const kind = event.target.value === 'TRUE_FALSE' ? 'TRUE_FALSE' : 'MULTIPLE_CHOICE'
             setDraft((current) => ({ ...current, kind, options: kind === 'TRUE_FALSE' ? ['Verdadero', 'Falso'] : ['', '', '', ''], correctIndex: null }))
           }}>
-            <option value="MULTIPLE_CHOICE">Cuatro opciones</option>
+            <option value="MULTIPLE_CHOICE">Opción múltiple</option>
             <option value="TRUE_FALSE">Verdadero / Falso</option>
           </select>
         </div>
@@ -270,6 +270,20 @@ export function QuestionForm({
               </label>
             </div>
           ))}
+          {draft.kind !== 'TRUE_FALSE' && <>
+            {draft.options.length < 5 && <button type="button" className="secondary" disabled={pending || Boolean(partial)}
+              onClick={() => setDraft(current => ({ ...current, options: [...current.options, ''] }))}>Agregar opción</button>}
+            {draft.options.length > 2 && <button type="button" className="secondary" disabled={pending || Boolean(partial)}
+              onClick={() => {
+                const lastIndex = draft.options.length - 1
+                setDraft(current => ({
+                  ...current,
+                  options: current.options.slice(0, -1),
+                  correctIndex: current.correctIndex === lastIndex ? null : current.correctIndex,
+                }))
+                setErrors(current => ({ ...current, [`option-${lastIndex}`]: '', correct: '' }))
+              }}>Quitar última opción</button>}
+          </>}
           {errors.correct ? (
             <p className="field-error" role="alert">
               {errors.correct}
@@ -296,7 +310,7 @@ export function QuestionForm({
             ) : null}
           </div>
           {draft.kind === 'TRUE_FALSE' ? (
-            <p className="muted">En la partida, cada respuesta correcta vale 1 punto.</p>
+            <p className="muted">La puntuación en vivo depende del modo de la sala.</p>
           ) : <div className="field">
             <label htmlFor="points">Puntos</label>
             <input

@@ -68,7 +68,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
           <div className="host-activity-options">
             <label className="host-activity-option">
               <input type="radio" name="host-activity" value="trivia" checked={activity === 'trivia'} onChange={() => setActivity('trivia')} aria-labelledby="trivia-mode" aria-describedby="trivia-description" />
-              <span><strong id="trivia-mode">Trivia (Verdadero/Falso)</strong><small id="trivia-description">Responde las preguntas de tu cuestionario.</small></span>
+              <span><strong id="trivia-mode">Trivia</strong><small id="trivia-description">Responde las preguntas de tu cuestionario.</small></span>
             </label>
             <label className="host-activity-option">
               <input type="radio" name="host-activity" value="goal-kick" checked={activity === 'goal-kick'} onChange={() => setActivity('goal-kick')} aria-labelledby="goal-kick-mode" aria-describedby="goal-kick-description" />
