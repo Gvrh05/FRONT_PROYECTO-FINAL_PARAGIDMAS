@@ -2,15 +2,54 @@
 
 ## Uso y alcance
 
+### Crear fútbol sin cuestionario (flujo corregido)
+
+Hay tres accesos al mismo formulario:
+
+1. **Dashboard → Crear partida → Actividad de la sala → Tiro al Arco · sin preguntas**.
+2. **Quices → Nuevo cuestionario → Crear Tiro al Arco sin preguntas**.
+3. Al agregar una pregunta, **Tipo de actividad → Tiro al Arco**, junto a
+   **Opción múltiple (2–5 opciones)** y **Verdadero / Falso**.
+
+Al elegir fútbol se ocultan enunciado, respuestas, puntos y tiempo. Solo se piden
+nombre (obligatorio), descripción y foto opcional. Crear lleva al lobby propio;
+se comparte código/QR y el host pulsa **Iniciar Tiro al Arco · 40 s** cuando haya
+otro jugador conectado. No se inicia el cronómetro mientras se llena el formulario.
+Si se vuelve a trivia antes de guardar, se conserva el borrador anterior. No se
+permite convertir una pregunta ya guardada en una sala al editarla.
+
+Estas salas no tienen cuestionario (`quizId:null`, `activity:GOAL_KICK` en el
+contrato de memoria), ni crean preguntas vacías o resultados ficticios en DB.
+El servidor rechaza iniciar trivia en ellas. Se puede repetir el fútbol tras
+volver al lobby. Son salas temporales, **no plantillas persistentes en Quices**:
+caducan a las 12 horas y se pierden al reiniciar el proceso Backend.
+
+`POST /game-sessions/goal-kick` usa la autenticación existente y multipart con
+`name`, `description?`, `image?`. El DTO rechaza campos extra. Se conserva intacto
+`POST /game-sessions` con su quizId para la trivia. Las entidades/migraciones y
+los tipos de pregunta persistidos no cambian.
+
+Las fotos admiten JPEG/PNG/WebP de hasta 5 MiB y 25 megapíxeles. Se decodifican
+con Sharp (dependencia ya existente), sin animación, y se normalizan a WebP de
+máximo 960×540 y 512 KiB. Se mantienen únicamente en memoria, con límite global
+de 100 salas independientes y dos decodificaciones simultáneas; se liberan al
+eliminar/caducar sala. El endpoint de portada está vinculado a la invitación
+pública vigente y usa `no-store`/`nosniff`; no se guardan rutas de usuario ni URLs
+externas. Nombre, descripción y portada se recuperan en snapshots de host,
+cuenta e invitado, sin transmitir el Buffer de imagen por WebSocket.
+
 En una sala en LOBBY, el host puede pulsar **Iniciar Tiro al Arco · 40 s** si hay
 otro jugador conectado. Cada jugador, de cuenta o invitado, juega en paralelo.
 El host observa el ranking, puede cancelar y después volver al lobby. Solo al
 volver al lobby se permite iniciar trivia u otra actividad/admitir nuevos usuarios.
+Esta última posibilidad de cambiar a trivia requiere una sala asociada a un
+cuestionario; las salas independientes nuevas son exclusivamente de fútbol.
 
 ### Selector de actividad del host
 
-El lobby muestra dos tarjetas de selección con radios nativos accesibles:
-**Trivia (Verdadero/Falso)** y **Minijuego: Tiro al Arco**, cada una con descripción.
+Con `VITE_GOAL_KICK_ENABLED=true`, el lobby de una sala de cuestionario muestra
+dos tarjetas de selección con radios nativos accesibles: **Trivia** y
+**Minijuego: Tiro al Arco**, cada una con descripción.
 Trivia está seleccionada por defecto. Un único botón muestra «Comenzar Partida»
 o «Iniciar Tiro al Arco · 40 s», según la selección; seleccionar una tarjeta no
 inicia la actividad automáticamente.
@@ -18,7 +57,10 @@ inicia la actividad automáticamente.
 La trivia conserva su inicio REST autorizado mediante `startSession(roomCode)`;
 el fútbol llama `sendGoalKickCommand({ action: 'start' })`, que ya emite
 `game:start-minigame` por el socket existente. No se añade un nuevo protocolo de
-inicio de trivia ni soporte de preguntas múltiples que el motor actual no ofrece.
+inicio de trivia. Se conservan las preguntas múltiples de 2–5 opciones y los
+modos de puntuación incorporados por los compañeros. Las salas independientes
+ya creadas con `activity:GOAL_KICK` siempre inician fútbol, nunca un REST de trivia,
+aunque el selector de salas de cuestionario esté oculto por la bandera de build.
 Mientras se espera confirmación se bloquean tanto la selección como el inicio.
 Se requieren identidad host, conexión y otro participante conectado.
 
@@ -98,8 +140,11 @@ preferencia por conectados; para un solo jugador aparece «Portero de práctica�
 - El motor liquida impactos anteriores al deadline antes del resultado final,
   incluso si los callbacks se retrasan.
 - **Fútbol: +10 por gol, 0 por fallo**. Ledger exclusivo `goals*10`.
-- **Trivia: 20 por acierto +5 antes de la mitad del tiempo**, sin cambios al motor
-  `live-game.ts`, contador de aciertos o resultados persistidos.
+- **Trivia clásica: 20 por acierto +5 antes de la mitad del tiempo**. También se
+  conservan Contrarreloj (`speed`, 25→5 según tiempo) y Precisión (`precision`,
+  25 por acierto). El host elige el modo al crear una sala de cuestionario.
+  La integración no modifica `live-game.ts` ni mezcla el ledger del fútbol con
+  esos modos, contadores de aciertos o resultados persistidos.
 - Un vuelo por identidad, caché de commandId/attemptId, límite de intentos y rate
   limit. Un retry no genera otro shotId ni puntúa otra vez. Parámetros cambiados
   para un commandId existente se rechazan.
@@ -155,15 +200,19 @@ scripts/verify-goal-kick-parity.cjs
 src/components/TestCredentialsPanel.css
 src/components/TestCredentialsPanel.test.tsx
 src/components/TestCredentialsPanel.tsx
+src/components/ActivityTypeSelect.tsx
 src/features/goal-kick/contracts.test.ts
 src/features/goal-kick/contracts.ts
 src/features/goal-kick/goal-kick.css
 src/features/goal-kick/GoalKickCanvas.tsx
 src/features/goal-kick/GoalKickGame.tsx
 src/features/goal-kick/GoalKickHostPanel.tsx
+src/features/goal-kick/GoalKickRoomDetails.tsx
+src/features/goal-kick/GoalKickRoomForm.tsx
 src/features/goal-kick/physics.test.ts
 src/features/goal-kick/physics.ts
 src/features/goal-kick/presentation.test.tsx
+src/features/goal-kick/room-authoring.test.tsx
 src/features/goal-kick/test-fixture.ts
 src/features/goal-kick/useGoalKickPresentation.ts
 src/vite-env.d.ts
@@ -178,11 +227,14 @@ src/api/gameSessions.ts
 src/components/AvatarSelector.tsx
 src/components/GameExperience.test.tsx
 src/components/LoginForm.tsx
+src/components/QuestionForm.tsx
+src/components/QuizForm.tsx
 src/components/OwlAvatar.test.tsx
 src/components/OwlAvatar.tsx
 src/components/avatars.css
 src/pages/GuestJoinPage.tsx
 src/pages/HostLobbyPage.tsx
+src/pages/HostCreateSessionPage.tsx
 src/pages/LobbyExperience.test.tsx
 src/pages/PlayerLobbyPage.tsx
 src/realtime/guest.test.tsx
@@ -198,11 +250,13 @@ Archivos nuevos:
 
 ```text
 src/modules/game-session/dto/goal-kick-command.dto.ts
+src/modules/game-session/dto/create-goal-kick-room.dto.ts
 src/modules/game-session/engine/goal-kick-game.spec.ts
 src/modules/game-session/engine/goal-kick-game.ts
 src/modules/game-session/engine/goal-kick-physics.spec.ts
 src/modules/game-session/engine/goal-kick-physics.ts
 src/modules/game-session/services/goal-kick.integration.spec.ts
+src/modules/game-session/services/goal-kick-room-images.service.ts
 test/goal-kick.websocket.e2e-spec.ts
 ```
 
@@ -213,6 +267,11 @@ src/modules/game-session/engine/session-manager.spec.ts
 src/modules/game-session/engine/session-manager.ts
 src/modules/game-session/gateways/game.gateway.ts
 src/modules/game-session/services/game-session.service.ts
+src/modules/game-session/controllers/game-session.controller.ts
+src/modules/game-session/controllers/public-invitations.controller.ts
+src/modules/game-session/dto/session-response.dto.ts
+src/modules/game-session/game-session.module.ts
+test/game-session.e2e-spec.ts
 ```
 
 Sin modificaciones a `socket.ts`, `DashboardPage.tsx`, `live-game.ts`, entidades,
@@ -275,11 +334,13 @@ No se ha realizado QA en móviles físicos, con lector de pantalla real ni bajo
 una simulación exhaustiva de redes degradadas. El smoke aislado no prueba el
 despliegue ni la contraseña actual de la cuenta demo existente.
 
-Estado Git: los tres repositorios permanecen en `develop`. La implementación
+Estado Git en las entregas anteriores: los tres repositorios permanecen en `develop`. La implementación
 inicial se dejó local; el responsable autorizó después `git add .` y el commit
 Frontend `feat: integrate game mode selector in host lobby to launch trivia or goal kick minigame`,
 que incluye el selector y la implementación Frontend previa. Backend continúa
 con sus cambios locales sin commit; Auth está limpio. No se hace push.
+La corrección posterior del formulario/salas independientes se deja local, sin
+un nuevo commit ni push.
 
 ### Verificación de la integración del selector
 
@@ -294,3 +355,57 @@ con sus cambios locales sin commit; Auth está limpio. No se hace push.
 - El build mantiene el aviso no bloqueante de chunk grande: 618.88 kB JS,
   195.15 kB gzip. No se repitió la suite completa de Backend porque este ajuste
   no modifica sus archivos.
+
+### Verificación posterior: formulario y salas independientes
+
+- Frontend: build/lint y `verify:production` aprobados; suite completa de Vitest:
+  **83 pruebas en 28 archivos**, incluyendo creación sin cuestionarios y el
+  selector entre cuatro opciones, V/F y fútbol. Chunk actual: 624.22 kB JS,
+  196.94 kB gzip; se mantiene el aviso de tamaño sin ocultarlo.
+- Backend: build/lint aprobados y **146 pruebas unitarias/de integración**.
+- `pnpm test:e2e --runInBand --testPathPatterns='game-session.e2e|goal-kick.websocket'`:
+  **24 pruebas en 2 suites** con Nest HTTP, JWT/Socket.IO y repositorios fixtures.
+  Incluye metadatos, foto real, ausencia de quiz, auth obligatoria, campos extra,
+  nombre vacío, archivo inválido/sobredimensionado y snapshot de invitado seguro.
+  Se actualizó el wiring fixture de PokéAPI y expectativas antiguas de campos de
+  participantes/puntuación de trivia; no se cambió el motor 20/+5.
+- Smoke Edge aislado aprobado: primero fútbol/trivia de sala tradicional y luego
+  creación independiente con foto desde UI, recarga de host, invitado, inicio,
+  cancelación y retorno. No se realizó ninguna escritura de sesión DB fixture al
+  crear la sala independiente. Auth/DB siguen siendo fixtures, no un despliegue real.
+- No se hicieron nuevos commits ni push para esta corrección. Es necesario
+  ejecutar/desplegar ambos proyectos actualizados para usar el nuevo endpoint.
+
+### Integración de stash y conflictos (18 de noviembre de 2026)
+
+Se integraron los seis archivos en conflicto sin sustituir una rama completa por
+la otra. La trivia mantiene opciones de 2–5 respuestas, modos classic/speed/precision,
+validación del servidor y avatar de perfil; GoalKick conserva física, eventos,
+formularios independientes, metadatos/foto y retorno al lobby. El selector común
+evita duplicar `question-kind` y conserva agregar/quitar opciones y respuesta correcta.
+
+Se mantiene `VITE_GOAL_KICK_ENABLED` para el selector de fútbol dentro de salas
+de trivia, mientras una sala independiente de fútbol nunca intenta iniciar trivia.
+El smoke usa explícitamente la bandera y la puntuación clásica, y verifica el
+avatar de cuenta desde su perfil (no desde un selector de unión eliminado).
+El verificador de producción ahora espera el texto genérico de cuestionarios
+mixtos; sus comprobaciones originales de secretos y rutas de desarrollo siguen activas.
+
+Resultados de esta integración:
+
+- Backend: build/lint, 152 pruebas y 24 e2e HTTP/WebSocket aprobados.
+- Frontend: build/lint, 89 pruebas en 28 archivos y verify:production aprobados;
+  además, 19 pruebas focalizadas de autoría/lobby aprobadas tras ampliar regresiones.
+- Regresión añadida: jugar/cancelar fútbol, volver e iniciar una pregunta de cinco
+  opciones conservando cada uno de los tres modos de puntuación y el avatar 14.
+- Paridad: 189 trayectorias. Smoke aislado Edge aprobado con host, cuenta,
+  invitado, gol, recarga, 40 s reales, trivia posterior y sala independiente con foto.
+  Se mantienen las limitaciones de Auth/DB fixtures, sin verificar el despliegue.
+- El build mantiene aviso de bundle grande: 631.67 kB JS, 199.82 kB gzip.
+
+Se autorizan ahora commits separados de Backend y Frontend en `develop`, sin push.
+Backend: `c3cef4d` (`feat(backend): integrate goal kick minigame and resolve merge conflicts with trivia logic`).
+Antes de eliminar los stash aplicados se verifican sus OIDs y archivos staged;
+hay bundles de respaldo verificados fuera de los repositorios, en el directorio
+temporal aprobado. Auth no se modifica. Esta etapa también actualiza
+`scripts/verify-production.cjs` y `src/vite-env.d.ts`.

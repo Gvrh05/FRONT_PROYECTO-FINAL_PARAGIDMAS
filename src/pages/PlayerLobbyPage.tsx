@@ -8,6 +8,7 @@ import { useSessionLobby } from '../realtime/useSessionLobby'
 import { savedAvatar } from '../components/AvatarSelector'
 import { useState } from 'react'
 import { GoalKickGame } from '../features/goal-kick/GoalKickGame'
+import { GoalKickRoomDetails } from '../features/goal-kick/GoalKickRoomDetails'
 
 export function PlayerLobbyPage({ roomCode }: { roomCode: string }) {
   const { user } = useAuth()
@@ -22,6 +23,7 @@ export function PlayerLobbyPage({ roomCode }: { roomCode: string }) {
     <ErrorBanner error={error} />
     {loading && <p role="status">Recuperando tu sala…</p>}
     {session && <>
+      <GoalKickRoomDetails details={session.roomDetails} />
       <RoomCodeBadge roomCode={session.roomCode} />
       <p className="connection" role="status">{connected ? 'Conexión en vivo activa' : 'Reconectando…'}</p>
       <p className="status" data-testid="session-status" role="status">{finished || session.status === 'FINISHED' ? 'La sala ha finalizado' : session.status === 'IN_PROGRESS' ? 'Partida en curso' : 'En lobby'}</p>
