@@ -1,3 +1,4 @@
+import './QuizFilters.css'
 import { useEffect, useState } from 'react'
 import { apiErrorMessage } from '../api/http'
 import { createPokemonQuiz, deleteQuiz, listQuizzes } from '../api/quizzes'
@@ -23,6 +24,13 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
   const [deleteTarget, setDeleteTarget] = useState<QuizSummary | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [ownOnly, setOwnOnly] = useState(false)
+  const visibleQuizzes = state.status === 'ready'
+    ? state.quizzes.filter((quiz) =>
+      (!ownOnly || !quiz.isDemo) &&
+      (quiz.title + ' ' + (quiz.description ?? '')).toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es')))
+    : []
   const [generatingPokemon, setGeneratingPokemon] = useState(false)
 
   async function generatePokemon() {
@@ -112,6 +120,20 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
         </p>
       ) : null}
 
+      <div className="quiz-filters">
+        <label htmlFor="quiz-search">Buscar cuestionarios</label>
+        <input id="quiz-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Busca por título o descripción" />
+        <label className="checkbox-label"><input type="checkbox" checked={ownOnly} onChange={(event) => setOwnOnly(event.target.checked)} /> Solo mis cuestionarios</label>
+        {state.status === 'ready' && <p role="status">{visibleQuizzes.length} cuestionarios encontrados</p>}
+      </div>
+
+      {state.status === 'ready' && state.quizzes.length > 0 && visibleQuizzes.length === 0 && (
+        <div className="empty">
+          <h3>No encontramos cuestionarios con esos filtros</h3>
+          <button type="button" onClick={() => { setSearch(''); setOwnOnly(false) }}>Limpiar filtros</button>
+        </div>
+      )}
+
       {state.status === 'loading' ? (
         <p role="status" className="muted">
           Cargando cuestionarios…
@@ -138,7 +160,7 @@ export function QuizList({ onCreate, onOpen, onEdit }: QuizListProps) {
 
       {state.status === 'ready' && state.quizzes.length > 0 ? (
         <ul className="quiz-list">
-          {state.quizzes.map((quiz) => (
+          {visibleQuizzes.map((quiz) => (
             <li key={quiz.id} className="card quiz-item">
               <div>
                 <h3>{quiz.title}</h3>

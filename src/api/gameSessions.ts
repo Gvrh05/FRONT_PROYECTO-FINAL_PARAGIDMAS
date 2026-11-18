@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { http } from './http'
+import { goalKickStateSchema } from '../features/goal-kick/contracts'
 
 export const roomCodeSchema = z.string().regex(/^\d{6}$/, 'El código debe tener exactamente 6 dígitos.')
 export const quizIdSchema = z.uuid('Selecciona un cuestionario válido.')
-const participantSchema = z.object({ userId: z.string(), name: z.string(), connected: z.boolean() })
+const participantSchema = z.object({ userId: z.string(), name: z.string(), connected: z.boolean(), avatarId: z.number().int().min(0).max(14).optional(), ready: z.boolean().optional(), score: z.number().optional(), isHost: z.boolean().optional() })
 const sessionSchema = z.object({
   sessionId: roomCodeSchema,
   roomCode: roomCodeSchema,
@@ -13,18 +14,25 @@ const sessionSchema = z.object({
   quizId: quizIdSchema,
   startedAt: z.string().optional(),
 })
+export type ScoringMode = 'classic' | 'speed' | 'precision'
+
 export const liveRoundSchema = z.object({
   questionId: z.uuid(), questionText: z.string(), imageUrl: z.string().nullable(),
   position: z.number(), total: z.number(), version: z.number(),
   serverNow: z.number(), closesAt: z.number(), closed: z.boolean(),
-  correctAnswer: z.boolean().optional(), answered: z.boolean().optional(), points: z.number().optional(),
+  scoringMode: z.enum(['speed', 'precision']).optional(), openedAt: z.number().optional(),
+  choices: z.array(z.string()).min(2).max(5).optional(),
+  choiceVotes: z.array(z.number().int().nonnegative()).min(2).max(5).optional(),
+  correctAnswer: z.union([z.boolean(), z.number().int().min(0).max(4)]).optional(), answered: z.boolean().optional(), points: z.number().optional(),
+  votesReceived: z.number().int().nonnegative().optional(), eligiblePlayers: z.number().int().nonnegative().optional(),
+  voteCounts: z.object({ true: z.number().int().nonnegative(), false: z.number().int().nonnegative() }).optional(),
 })
 export const finishSchema = z.object({
   roomCode: roomCodeSchema, version: z.number(),
-  scores: z.array(z.object({ playerName: z.string(), score: z.number(), rank: z.number() })),
+  scores: z.array(z.object({ playerName: z.string(), score: z.number(), rank: z.number(), avatarId: z.number().int().min(0).max(14).optional() })),
 })
-export type LiveRound = z.infer<typeof liveRoundSchema>
-export const snapshotSchema = sessionSchema.extend({ participants: z.array(participantSchema), game: liveRoundSchema.optional() })
+export type LiveRound = z.infer<typeof liveRoundSchema> & { resultReceived?: boolean }
+export const snapshotSchema = sessionSchema.extend({ participants: z.array(participantSchema), game: liveRoundSchema.optional(), goalKick: goalKickStateSchema.optional() })
 // Guest snapshots deliberately omit private host and quiz identifiers.
 export const guestSnapshotSchema = snapshotSchema.omit({ hostId: true, quizId: true }).transform((snapshot) => ({ ...snapshot, hostId: '', quizId: '' }))
 export const participantsUpdatedSchema = z.object({ participants: z.array(participantSchema) })
@@ -34,8 +42,8 @@ export type Session = z.infer<typeof sessionSchema>
 export type SessionSnapshot = z.infer<typeof snapshotSchema>
 export type AvailableQuiz = { id: string; title: string }
 
-export async function createGameSession(quizId: string): Promise<Session> {
-  const { data } = await http.post('/game-sessions', { quizId: quizIdSchema.parse(quizId) })
+export async function createGameSession(quizId: string, scoringMode?: ScoringMode): Promise<Session> {
+  const { data } = await http.post('/game-sessions', { quizId: quizIdSchema.parse(quizId), ...(scoringMode && { scoringMode }) })
   return sessionSchema.parse(data)
 }
 export async function getSession(roomCode: string, signal?: AbortSignal): Promise<SessionSnapshot> {

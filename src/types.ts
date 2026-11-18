@@ -1,6 +1,7 @@
 export type AuthRole = 'MASTER' | 'PROFESOR'
 
 export interface AuthUser {
+  avatarId?: number
   id: string
   username: string
   role: AuthRole

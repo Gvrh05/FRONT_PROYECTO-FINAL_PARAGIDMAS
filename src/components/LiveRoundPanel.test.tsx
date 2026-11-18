@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveRound } from '../api/gameSessions'
 import { LiveRoundPanel } from './LiveRoundPanel'
+import { celebrateAnswer } from './answerConfetti'
+vi.mock('./answerConfetti', () => ({ celebrateAnswer: vi.fn() }))
+beforeEach(() => vi.clearAllMocks())
 
 const question: LiveRound = {
   questionId: 'efed51ad-1c55-4817-a164-c70f679e8001',
@@ -16,6 +19,13 @@ const question: LiveRound = {
 }
 
 describe('partida en vivo', () => {
+  it('actualiza el contador y la barra con los votos enviados por el servidor', () => {
+    const { rerender } = render(<LiveRoundPanel round={{ ...question, votesReceived: 0, eligiblePlayers: 5 }} connected pending={false} />)
+    expect(screen.getByText('Votos recibidos: 0 / 5')).toBeVisible()
+    rerender(<LiveRoundPanel round={{ ...question, votesReceived: 3, eligiblePlayers: 5 }} connected pending={false} />)
+    expect(screen.getByText('Votos recibidos: 3 / 5')).toBeVisible()
+    expect(screen.getByRole('progressbar', { name: 'Votos recibidos' })).toHaveAttribute('value', '3')
+  })
   it('permite responder Falso y deshabilita el envío al confirmar', () => {
     const onAnswer = vi.fn()
     const { rerender } = render(<LiveRoundPanel round={question} connected pending={false} onAnswer={onAnswer} />)
@@ -34,5 +44,40 @@ describe('partida en vivo', () => {
     rerender(<LiveRoundPanel round={{ ...question, closed: true, correctAnswer: true }} connected host pending={false} onNext={onNext} />)
     fireEvent.click(screen.getByRole('button', { name: 'Siguiente pregunta' }))
     expect(onNext).toHaveBeenCalledOnce()
+  })
+
+  it('permite al host terminar la votación antes de que se agote el tiempo', () => {
+    const close = vi.fn()
+    const { rerender } = render(<LiveRoundPanel round={question} connected host pending={false} onClose={close} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Terminar votación' }))
+    expect(close).toHaveBeenCalledOnce()
+    rerender(<LiveRoundPanel round={question} connected host pending onClose={close} />)
+    expect(screen.getByRole('button', { name: 'Terminar votación' })).toBeDisabled()
+    rerender(<LiveRoundPanel round={{ ...question, closed: true }} connected host pending={false} onClose={close} />)
+    expect(screen.queryByRole('button', { name: 'Terminar votación' })).toBeNull()
+    expect(screen.getByRole('timer')).toHaveTextContent('Votación cerrada')
+  })
+
+  it('no celebra al seleccionar, solo un acierto confirmado por round-result, una sola vez', () => {
+    const answer = vi.fn()
+    const { rerender } = render(<LiveRoundPanel round={question} connected pending={false} onAnswer={answer} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Verdadero' }))
+    expect(answer).toHaveBeenCalledWith(true)
+    expect(celebrateAnswer).not.toHaveBeenCalled()
+    const result = { ...question, closed: true, answered: true, points: 25, correctAnswer: true, resultReceived: true }
+    rerender(<LiveRoundPanel round={result} connected pending={false} onAnswer={answer} />)
+    expect(celebrateAnswer).toHaveBeenCalledWith(true)
+    rerender(<LiveRoundPanel round={{ ...result, votesReceived: 3 }} connected pending={false} onAnswer={answer} />)
+    expect(celebrateAnswer).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('+25 puntos')).toBeVisible()
+  })
+
+  it('no celebra respuestas fallidas, ausentes, snapshots ni la vista del host', () => {
+    const { rerender } = render(<LiveRoundPanel round={{ ...question, closed: true, answered: true, points: 0, resultReceived: true }} connected pending={false} />)
+    expect(celebrateAnswer).not.toHaveBeenCalled()
+    rerender(<LiveRoundPanel round={{ ...question, closed: true, answered: false, points: 0, resultReceived: true }} connected pending={false} />)
+    rerender(<LiveRoundPanel round={{ ...question, closed: true, answered: true, points: 25 }} connected pending={false} />)
+    rerender(<LiveRoundPanel round={{ ...question, closed: true, answered: true, points: 25, resultReceived: true }} connected host pending={false} />)
+    expect(celebrateAnswer).not.toHaveBeenCalled()
   })
 })

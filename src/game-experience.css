@@ -1,0 +1,72 @@
+/* Live play uses a separate stage and roster. Grid children never overlap. */
+.live-game-page.container, .reference-lobby.card { max-width: 1280px; width: 100%; }
+.game-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); align-items: start; gap: 24px; width: 100%; }
+.game-stage, .game-roster { min-width: 0; }
+.game-stage { display: grid; gap: 20px; }
+.game-roster { border: 1px solid #ffffff1a; border-radius: 16px; padding: 20px; background: #0f172acc; }
+.game-roster h2 { font-size: 18px; margin: 0 0 16px; }
+.game-roster .participants { list-style: none; display: grid; gap: 12px; padding: 0; margin: 0; }
+.game-roster .participants .participant-card { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px; border: 1px solid #ffffff1a; border-radius: 12px; background: #1e293b; }
+.game-roster .participants .participant-ready { border-color: #4ade8070; background: #14532d40; }
+.participant-name { overflow-wrap: anywhere; font-weight: 600; }
+.participant-name small { display: block; font-size: 12px; color: #b9c8db; font-weight: 400; }
+.participant-score { color: #93c5fd; font-size: 13px; white-space: nowrap; }
+.participant-card .presence { grid-column: 2 / -1; font-size: 11px; }
+.owl-avatar { display: inline-grid; place-items: center; flex-shrink: 0; width: 48px; height: 48px; border: 1px solid #ffffff26; border-radius: 14px; font-size: 22px; line-height: 1; white-space: nowrap; }
+.owl-avatar .profelink-owl { display: block; width: 100%; height: 100%; }
+.avatar-selector { border: 0; padding: 0; margin: 20px 0; min-width: 0; }
+.avatar-selector legend { font-weight: 600; margin-bottom: 12px; }
+.avatar-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; max-width: 580px; }
+.avatar-options .owl-avatar { width: 100%; height: auto; aspect-ratio: 1; min-width: 48px; max-width: 88px; border: 0; }
+.avatar-options button { position: relative; display: grid; place-items: center; padding: 6px; background: #0f172a; border: 2px solid transparent; border-radius: 16px; box-shadow: none; }
+.avatar-options button[aria-pressed="true"] { border-color: #60a5fa; box-shadow: 0 0 0 3px #3b82f633; }
+.avatar-check { position: absolute; right: -3px; top: -6px; background: #2563eb; border-radius: 50%; padding: 2px 5px; font-size: 12px; }
+.game-stage .live-round { padding: clamp(20px, 4vw, 40px); border-radius: 20px; margin: 0; }
+.game-stage .round-meta strong { background: #1e3a8a; color: #dbeafe; }
+.game-stage .round-result { background: #14532d60; color: #dcfce7; border: 1px solid #4ade8040; }
+.game-stage .live-round h2 { font-size: clamp(24px, 3vw, 38px); line-height: 1.3; text-wrap: balance; overflow-wrap: anywhere; margin: 20px 0; }
+.game-stage .round-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.game-stage .round-actions button { min-height: 100px; font-size: clamp(20px, 2.5vw, 28px); font-weight: 700; border-radius: 16px; }
+.game-stage .round-actions button:first-child { background: #166534; border-color: #4ade8050; }
+.game-stage .round-actions button:last-child { background: #991b1b; border-color: #f8717150; }
+.vote-counter { display: grid; gap: 10px; padding: 14px 18px; border: 1px solid #3b82f650; border-radius: 12px; background: #1e3a8a30; color: #bfdbfe; }
+.vote-counter progress { width: 100%; height: 10px; accent-color: #60a5fa; }
+.lobby-welcome { display: grid; justify-items: center; gap: 16px; padding: 32px 20px; text-align: center; border: 1px solid #3b82f640; border-radius: 20px; background: linear-gradient(150deg, #1e3a8a30, #0f172a); }
+.lobby-welcome h2, .lobby-welcome p { margin: 0; }
+.lobby-owl { font-size: 64px; animation: owl-float 3s ease-in-out infinite; }
+.start-game-button, .ready-button { min-height: 56px; font-size: 18px; font-weight: 700; }
+.ready-button[aria-pressed="true"] { background: #166534; border-color: #4ade80; }
+.podium { text-align: center; }
+.podium-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 12px; margin: 32px 0; }
+.podium-place { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0; padding: 20px 10px 0; border: 1px solid #ffffff26; border-radius: 16px 16px 8px 8px; background: #1e293b; }
+.podium-place h3 { font-size: 16px; overflow-wrap: anywhere; max-width: 100%; margin: 0; }
+.podium-place-1 { grid-column: 2; grid-row: 1; border-color: #fbbf2470; background: linear-gradient(#713f1260, #1e293b); }
+.podium-place-2 { grid-column: 1; grid-row: 1; }
+.podium-place-3 { grid-column: 3; grid-row: 1; }
+.podium-medal { font-size: 40px; }
+.podium-rank { display: grid; place-items: center; width: 100%; height: 60px; font-size: 28px; font-weight: 800; color: #cbd5e1; }
+.podium-place-1 .podium-rank { height: 120px; color: #fde68a; }
+.podium-place-2 .podium-rank { height: 85px; }
+.score-table-wrap { overflow-x: auto; }
+.score-table { width: 100%; border-collapse: collapse; text-align: left; }
+.score-table caption { text-align: left; font-weight: 700; padding: 16px 0; }
+.score-table th, .score-table td { padding: 12px; border-bottom: 1px solid #ffffff1a; }
+.score-table tbody th { overflow-wrap: anywhere; }
+.score-table .owl-avatar { width: 32px; height: 32px; font-size: 15px; vertical-align: middle; margin-right: 10px; }
+@keyframes owl-float { 50% { transform: translateY(-8px) rotate(4deg); } }
+@media (max-width: 900px) {
+  .game-layout { grid-template-columns: minmax(0, 1fr); }
+  .game-roster .participants { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+}
+@media (max-width: 480px) {
+  .avatar-options { gap: 5px; }
+  .avatar-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .avatar-options .owl-avatar { width: 100%; height: auto; }
+  .game-stage .round-actions { grid-template-columns: minmax(0, 1fr); }
+  .game-stage .round-actions button { min-height: 76px; }
+  .podium-steps { gap: 6px; }
+  .podium-place { padding: 14px 5px 0; }
+  .podium-place h3 { font-size: 13px; }
+  .podium-place strong { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .lobby-owl { animation: none; } }

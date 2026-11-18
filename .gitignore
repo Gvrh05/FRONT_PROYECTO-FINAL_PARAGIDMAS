@@ -25,3 +25,5 @@ dist-ssr
 
 #Enviroment variables
 .env
+# Keep local environment backups out of commits too.
+.env*.bak

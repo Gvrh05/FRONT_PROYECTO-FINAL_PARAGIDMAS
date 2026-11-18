@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import '../App.css'
 import { LoginForm } from '../components/LoginForm'
 import { QuizDetail } from '../components/QuizDetail'
@@ -9,6 +8,9 @@ import { CreateGamePanel } from '../components/CreateGamePanel'
 import { ResultsPanel } from '../components/ResultsPanel'
 import { useSession } from '../session/session'
 import type { QuizSummary } from '../types'
+import { UsersPage } from './UsersPage'
+import { JoinSessionPage } from './JoinSessionPage'
+import { SidebarIcon } from '../components/SidebarIcon'
 
 type View =
   | { name: 'list' }
@@ -16,12 +18,15 @@ type View =
   | { name: 'create' }
   | { name: 'edit'; quiz: QuizSummary }
 
-type Section = 'quizzes' | 'create-game' | 'results'
+import { CosmicScene } from '../components/CosmicScene'
+import { OwlAvatar } from '../components/AvatarSelector'
 
-function Workspace() {
+type Section = 'quizzes' | 'create-game' | 'results' | 'users' | 'join'
+
+function Workspace({ initialSection = 'quizzes' }: { initialSection?: Section }) {
   const { session, logout } = useSession()
   const [view, setView] = useState<View>({ name: 'list' })
-  const [section, setSection] = useState<Section>('quizzes')
+  const [section, setSection] = useState<Section>(initialSection)
   if (!session) return null
 
   function navigate(next: Section) {
@@ -30,27 +35,27 @@ function Workspace() {
   }
 
   return (
-    <div className="dashboard-shell">
+    <div className="dashboard-shell reference-dashboard">
       <aside className="sidebar" aria-label="Navegación principal">
         <a className="brand" href="#inicio" onClick={(event) => { event.preventDefault(); navigate('quizzes') }}>
-          <span className="brand-mark">P</span><span>Profelink<span className="brand-light">Kahoot</span></span>
+          <img className="brand-mark" src="/getanyui/profelinkicon.png" alt="" width="40" height="40" /><span>Profelink<span className="brand-light">Kahoot</span></span>
         </a>
-        <p className="sidebar-label">Espacio de trabajo</p>
         <nav className="sidebar-nav">
-          {session.user.role === 'MASTER' && <Link to="/users">Usuarios</Link>}
-          <button className={section === 'quizzes' ? 'active' : ''} onClick={() => navigate('quizzes')}><span>▦</span> Quices</button>
-          <button className={section === 'create-game' ? 'active' : ''} onClick={() => navigate('create-game')}><span>▶</span> Crear partida</button>
-          <button className={section === 'results' ? 'active' : ''} onClick={() => navigate('results')}><span>▤</span> Resultados</button>
+          <button aria-pressed={section === 'quizzes'} className={`sidebar-action${section === 'quizzes' ? ' active' : ''}`} onClick={() => navigate('quizzes')}><SidebarIcon name="quizzes" /><span className="sidebar-button-label">Quices</span></button>
+          <button aria-pressed={section === 'create-game'} className={`sidebar-action${section === 'create-game' ? ' active' : ''}`} onClick={() => navigate('create-game')}><SidebarIcon name="create" /><span className="sidebar-button-label">Crear partida</span></button>
+          <button aria-pressed={section === 'results'} className={`sidebar-action${section === 'results' ? ' active' : ''}`} onClick={() => navigate('results')}><SidebarIcon name="results" /><span className="sidebar-button-label">Resultados</span></button>
+          <button disabled={session.user.role !== 'MASTER'} title={session.user.role === 'MASTER' ? 'Administrar usuarios' : 'Disponible para cuentas MASTER'} aria-pressed={section === 'users'} className={`sidebar-action${section === 'users' ? ' active' : ''}`} onClick={() => navigate('users')}><SidebarIcon name="users" /><span className="sidebar-button-label">Usuarios</span></button>
+          <button aria-pressed={section === 'join'} className={`sidebar-action${section === 'join' ? ' active' : ''}`} onClick={() => navigate('join')}><SidebarIcon name="join" /><span className="sidebar-button-label">Unirse a Sala</span></button>
         </nav>
         <div className="sidebar-account">
-          <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
+          <div className="avatar"><OwlAvatar avatarId={session.user.avatarId} /></div>
           <div className="account-copy"><strong>{session.user.username}</strong><small>Docente</small></div>
-          <button className="logout-button" aria-label="Cerrar sesión del dashboard" onClick={() => logout()}>Cerrar sesión</button>
+          <button className="sidebar-action" aria-label="Cerrar sesión" onClick={() => logout()}><SidebarIcon name="logout" /><span className="sidebar-button-label">Cerrar sesión</span></button>
         </div>
       </aside>
       <main className="dashboard-main">
-        <header className="dashboard-topbar"><span>Panel de control</span><span className="online-indicator">Sesión activa</span></header>
         <div className="dashboard-content">
+          <section className="reference-welcome" aria-label="Bienvenida"><p className="eyebrow">Tu comunidad de aprendizaje</p><h1>¡Hola, {session.user.username}!</h1><p>Aquí tienes tus cuestionarios y las actividades más importantes para tu próxima clase.</p><span className="reference-pill">Tu aula, conectada</span><CosmicScene compact /></section>
           {section === 'quizzes' ? (
             <>
               {view.name === 'list' ? <QuizList onCreate={() => setView({ name: 'create' })} onOpen={(quizId) => setView({ name: 'detail', quizId })} onEdit={(quiz) => setView({ name: 'edit', quiz })} /> : null}
@@ -61,17 +66,19 @@ function Workspace() {
           ) : null}
           {section === 'create-game' ? <CreateGamePanel /> : null}
           {section === 'results' ? <ResultsPanel /> : null}
+          {section === 'users' ? <UsersPage /> : null}
+          {section === 'join' ? <JoinSessionPage embedded /> : null}
         </div>
       </main>
     </div>
   )
 }
 
-function AuthoringApp() {
+function AuthoringApp({ initialSection }: { initialSection?: Section }) {
   const { session } = useSession()
   const [showLogin, setShowLogin] = useState(false)
-  if (session) return <Workspace key={session.generation} />
-  if (showLogin) return <div className="auth-page"><button className="back-link" onClick={() => setShowLogin(false)}>← Volver</button><LoginForm /></div>
+  if (session) return <Workspace key={session.generation} initialSection={initialSection} />
+  if (showLogin) return <div className="auth-page"><LoginForm /></div>
   return (
     <main className="landing">
       <nav className="landing-nav"><a className="brand landing-brand" href="#home"><span className="brand-mark">P</span><span>Profelink<span className="brand-light">Kahoot</span></span></a><button className="button-quiet" onClick={() => setShowLogin(true)}>Iniciar sesión</button></nav>
@@ -85,6 +92,6 @@ function AuthoringApp() {
   )
 }
 
-export function DashboardPage() {
-  return <AuthoringApp />
+export function DashboardPage({ initialSection }: { initialSection?: Section }) {
+  return <AuthoringApp initialSection={initialSection} />
 }

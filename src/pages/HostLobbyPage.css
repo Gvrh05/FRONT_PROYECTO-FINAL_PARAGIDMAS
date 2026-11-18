@@ -1,0 +1,12 @@
+.host-activity-selector { min-width: 0; margin: 0; padding: 0; border: 0; }
+.host-activity-selector legend { margin-bottom: 12px; font-size: 18px; font-weight: 700; color: #e2e8f0; }
+.host-activity-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.host-activity-option { display: flex; align-items: flex-start; gap: 12px; margin: 0; padding: 18px; border: 2px solid #ffffff26; border-radius: 16px; background: #111d30; color: #e2e8f0; cursor: pointer; }
+.host-activity-option:has(input:checked) { border-color: #93c5fd; background: #1e3a5f; }
+.host-activity-option:focus-within { outline: 3px solid #93c5fd; outline-offset: 3px; }
+.host-activity-option input { width: 20px; height: 20px; min-width: 20px; margin: 2px 0 0; accent-color: #93c5fd; }
+.host-activity-option strong, .host-activity-option small { display: block; overflow-wrap: anywhere; }
+.host-activity-option strong { font-size: 15px; line-height: 1.5; }
+.host-activity-option small { margin-top: 8px; color: #c3d1e4; font-size: 13px; line-height: 1.6; }
+.host-activity-selector:disabled .host-activity-option { opacity: .6; cursor: not-allowed; }
+@media (max-width: 600px) { .host-activity-options { grid-template-columns: minmax(0, 1fr); } }
