@@ -85,7 +85,7 @@ describe('formularios de autoría', () => {
     mock.restore()
   })
 
-  it('guarda cuatro opciones, luego la imagen y reintenta solo el archivo', async () => {
+  it('guarda una quinta opción, luego la imagen y reintenta solo el archivo', async () => {
     const { mock } = setupApi()
     const question: QuestionResource = {
       id: 'question-9', quizId: 'quiz-1', questionText: '¿Capital?',
@@ -95,6 +95,7 @@ describe('formularios de autoría', () => {
         { id: 'o2', text: 'Quito', isCorrect: false },
         { id: 'o3', text: 'Bogotá', isCorrect: false },
         { id: 'o4', text: 'La Paz', isCorrect: false },
+        { id: 'o5', text: 'Santiago', isCorrect: false },
       ],
     }
     const onPersisted = vi.fn()
@@ -102,7 +103,7 @@ describe('formularios de autoría', () => {
     let uploadCount = 0
     mock.onPost('/quizzes/quiz-1/questions').reply((config) => {
       const body = JSON.parse(config.data) as { options: Array<{ isCorrect: boolean }> }
-      expect(body.options).toHaveLength(4)
+      expect(body.options).toHaveLength(5)
       expect(body.options.filter((option) => option.isCorrect)).toHaveLength(1)
       expect(body).not.toHaveProperty('timeLimitSeconds')
       expect(body).not.toHaveProperty('points')
@@ -120,6 +121,8 @@ describe('formularios de autoría', () => {
     await user.type(screen.getByLabelText('Opción 2'), 'Quito')
     await user.type(screen.getByLabelText('Opción 3'), 'Bogotá')
     await user.type(screen.getByLabelText('Opción 4'), 'La Paz')
+    await user.click(screen.getByRole('button', { name: 'Agregar opción' }))
+    await user.type(screen.getByLabelText('Opción 5'), 'Santiago')
     await user.click(screen.getByLabelText('Correcta', { selector: 'input[value="0"]' }))
     const file = new File(['png'], 'mapa.png', { type: 'image/png' })
     await user.upload(screen.getByLabelText('Imagen (opcional)'), file)

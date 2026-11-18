@@ -1,0 +1,17 @@
+.cosmos { height: 310px; position: relative; width: 100%; pointer-events: none; isolation: isolate; }
+.cosmos canvas { position: absolute; width: 100%; height: 100%; inset: 0; opacity: .85; }
+.planet-system { position: absolute; width: 210px; height: 210px; left: 50%; top: 49%; transform: translate(-50%, -50%) rotate(-23deg); animation: planet-drift 14s ease-in-out infinite alternate; }
+.planet { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 28% 24%, #dcd7ff 0%, #9e8fdb 17%, #6162b3 37%, #282f66 61%, #090e27 82%); box-shadow: inset -25px -16px 35px #030617d9, inset 3px 2px 7px #e2dcff, 0 0 28px #a390f34d, 0 0 100px #6661cf24; }
+.planet-clouds { position: absolute; inset: -35%; transform: rotate(-15deg); opacity: .38; background: repeating-linear-gradient(174deg, transparent 0 12px, #d3c5ff44 15px, #8b8acb88 24px, transparent 33px), radial-gradient(ellipse at 30% 30%, #faf2ff, transparent 65%); filter: blur(5px); }
+.planet-ring { position: absolute; width: 350px; height: 104px; left: -70px; top: 60px; border-radius: 50%; border: 14px solid #b9a9e087; box-shadow: 0 0 0 2px #e5d4ff55, 0 0 0 8px #a299d52b, inset 0 0 0 4px #e0c5ff33, 0 0 30px #9883e320; transform: rotate(-9deg); }
+.planet-ring-back { clip-path: inset(0 0 50% 0); }
+.planet-ring-front { clip-path: inset(50% 0 0 0); }
+.planet-moon { position: absolute; width: 28px; height: 28px; right: -65px; top: -12px; border-radius: 50%; background: radial-gradient(circle at 25% 25%, #e7f9ff, #5089a4 40%, #0d213c 75%); box-shadow: 0 0 20px #70ceff33; }
+.orbital-path { position: absolute; border: 1px solid #c1a9ff1a; border-radius: 50%; width: 85%; height: 50%; left: 7%; top: 24%; transform: rotate(-25deg); }
+.orbital-path-two { transform: rotate(30deg); width: 68%; left: 16%; height: 70%; top: 12%; border-style: dashed; }
+@keyframes planet-drift { to { transform: translate(-50%, -54%) rotate(-18deg); } }
+
+.cosmos-compact { height: 200px; max-width: 420px; overflow: hidden; margin-inline: auto; }
+.cosmos-compact .planet-system { width: 136px; height: 136px; }
+.cosmos-compact .planet-ring { width: 216px; height: 62px; top: 42px; left: -40px; border-width: 8px; }
+@media (prefers-reduced-motion: reduce) { .cosmos .planet-system { animation: none; } }

@@ -86,6 +86,9 @@ export function validateQuestionDraft(draft: QuestionDraft): FieldErrors {
   else if (questionText.length > QUESTION_TEXT_MAX)
     errors.questionText = `El enunciado admite como máximo ${QUESTION_TEXT_MAX} caracteres.`
 
+  if (draft.kind !== 'TRUE_FALSE' && (draft.options.length < 2 || draft.options.length > 5))
+    errors.correct = 'Agrega entre 2 y 5 opciones.'
+
   draft.options.forEach((text, index) => {
     const value = text.trim()
     if (!value) errors[`option-${index}`] = 'La opción no puede estar vacía.'

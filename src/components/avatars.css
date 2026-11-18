@@ -1,0 +1,35 @@
+/* Transparent, scalable brand illustrations. Animation stays in CSS, not timers. */
+.owl-avatar { background: transparent; border: 0; border-radius: 0; }
+.profelink-owl { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 2px #0004); }
+.profelink-owl .owl-character { animation: owl-idle 5s ease-in-out infinite; }
+.profelink-owl .owl-eyes { transform-box: fill-box; transform-origin: center; animation: owl-blink 6s ease-in-out infinite; }
+.profelink-owl .owl-idea { animation: owl-idea-glow 4s ease-in-out infinite; }
+.profelink-owl :is(.owl-prop-sway, .owl-tassel, .owl-wand, .owl-guitar, .owl-gamepad, .owl-ninja-band) { transform-box: fill-box; transform-origin: center bottom; animation: owl-accessory-sway 4s ease-in-out infinite; }
+.profelink-owl .owl-cape { transform-box: fill-box; transform-origin: center top; animation: owl-cape-wave 3s ease-in-out infinite; }
+.profelink-owl :is(.owl-sparkle, .owl-music-note) { animation: owl-sparkle 3s ease-in-out infinite; }
+.profelink-owl .owl-katana { animation: owl-steel-shine 4s ease-in-out infinite; }
+.owl-theme-2 .owl-character, .owl-theme-6 .owl-character { animation-delay: -.8s; }
+.owl-theme-3 .owl-character, .owl-theme-7 .owl-character { animation-delay: -1.6s; }
+.owl-theme-4 .owl-character, .owl-theme-8 .owl-character { animation-delay: -2.4s; }
+.owl-theme-5 .owl-character, .owl-theme-9 .owl-character { animation-delay: -3.2s; }
+.owl-theme-10 .owl-character { animation-delay: -4s; }
+.owl-theme-11 .owl-character, .owl-theme-14 .owl-character { animation-delay: -1.2s; }
+.owl-theme-12 .owl-character, .owl-theme-15 .owl-character { animation-delay: -2.2s; }
+.owl-theme-13 .owl-eyes { animation-duration: 4.3s; }
+#root .owl-avatar { background: transparent; border: 0; border-radius: 0; }
+#root .avatar-selector .avatar-options { gap: 12px; max-width: 640px; }
+#root .avatar-selector .avatar-options button { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 8px; padding: 10px 6px; background: transparent; border: 2px solid #ffffff12; border-radius: 14px; box-shadow: none; }
+#root .avatar-selector .avatar-options button:hover:not(:disabled) { background: #ffffff05; border-color: #93c5fd80; box-shadow: none; }
+#root .avatar-selector .avatar-options button[aria-pressed="true"] { background: transparent; border-color: #60a5fa; box-shadow: 0 0 0 2px #60a5fa26; }
+#root .avatar-selector .avatar-options .owl-avatar { width: 100%; max-width: 100px; min-width: 48px; height: auto; aspect-ratio: 1; }
+.avatar-theme-name { font-size: 11px; line-height: 1.4; font-weight: 550; color: #cbd5e1; }
+@keyframes owl-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes owl-blink { 0%, 43%, 47%, 100% { transform: scaleY(1); } 45% { transform: scaleY(.08); } }
+@keyframes owl-accessory-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(3deg); } }
+@keyframes owl-cape-wave { 0%, 100% { transform: skewX(-2deg) scaleX(1); } 50% { transform: skewX(3deg) scaleX(1.04); } }
+@keyframes owl-idea-glow { 0%, 100% { filter: drop-shadow(0 0 0 #ffda3600); } 50% { filter: drop-shadow(0 0 5px #ffda3670); } }
+@keyframes owl-sparkle { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+@keyframes owl-steel-shine { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .profelink-owl :is(.owl-character, .owl-eyes, .owl-idea, .owl-prop-sway, .owl-tassel, .owl-wand, .owl-guitar, .owl-gamepad, .owl-ninja-band, .owl-cape, .owl-sparkle, .owl-music-note, .owl-katana) { animation: none; }
+}

@@ -1,0 +1,58 @@
+/* Values transcribed from the supplied dashboard part/code.css.
+   Application controls retain their original React handlers. */
+.reference-dashboard.dashboard-shell {
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ref-text);
+}
+.reference-dashboard .sidebar {
+  position: static;
+  height: auto;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 24px;
+  background: rgba(30, 41, 59, .5);
+  border: 1px solid rgba(255, 255, 255, .1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .2);
+}
+.reference-dashboard .sidebar-label { display: none; }
+.reference-dashboard .sidebar-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.reference-dashboard .sidebar-account { display: flex; align-items: center; gap: 12px; margin: 0 0 0 auto; padding: 0; border: 0; background: transparent; }
+.reference-dashboard .dashboard-content { padding: 24px; }
+.reference-dashboard .dashboard-topbar { border: 0; background: transparent; }
+.reference-dashboard .quiz-list { gap: 16px; }
+.reference-dashboard .quiz-list .quiz-item {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(30, 41, 59, .5);
+  border: 1px solid rgba(255, 255, 255, .1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+/* Remove the invented gradient illustration from the previous adaptation. */
+.reference-dashboard .quiz-list .quiz-item::before { content: none; }
+.reference-dashboard .quiz-item h3 { font-size: 20px; line-height: 28px; }
+.reference-dashboard .quiz-list .quiz-item:hover {
+  border-color: rgba(99, 102, 241, .25);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, .15);
+}
+.glass-premium, .reference-lobby.card, .reference-guest .card, .reference-auth .card {
+  background: rgba(30, 41, 59, .5);
+  border: 1px solid rgba(255, 255, 255, .1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .2);
+  border-radius: 16px;
+}
+@media (max-width: 767px) {
+  .reference-dashboard .sidebar { padding: 12px 16px; background: rgb(15, 23, 42); }
+  .reference-dashboard .dashboard-content { padding: 16px; }
+  .reference-dashboard .sidebar-account { flex-wrap: wrap; margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reference-dashboard .quiz-list .quiz-item:hover { transform: none; }
+}

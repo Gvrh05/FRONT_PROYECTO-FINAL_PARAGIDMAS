@@ -1,0 +1,11 @@
+/* Shared hierarchy for all six sidebar actions, including logout. */
+#root .reference-dashboard .sidebar .sidebar-action { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: #b7c7dd; font-size: 14px; font-weight: 550; line-height: 1.4; text-align: left; box-shadow: none; }
+#root .reference-dashboard .sidebar .sidebar-action:hover:not(:disabled) { background: #ffffff08; color: #fff; border-color: #ffffff26; box-shadow: none; }
+#root .reference-dashboard .sidebar .sidebar-action.active { background: #2563eb26; color: #bfdbfe; border-color: #60a5fa40; }
+#root .reference-dashboard .sidebar .sidebar-action:disabled { opacity: .5; cursor: not-allowed; }
+#root .reference-dashboard .sidebar .sidebar-action .sidebar-button-label { display: block; flex: 1; width: auto; font: inherit; color: inherit; text-align: left; }
+#root .reference-dashboard .sidebar .sidebar-icon { display: block; flex: 0 0 20px; width: 20px; height: 20px; color: inherit; }
+#root .reference-dashboard .sidebar-account .sidebar-action { grid-column: 1 / -1; width: 100%; }
+@media (max-width: 800px) {
+  #root .reference-dashboard .sidebar-account { grid-template-columns: 40px minmax(0, 1fr); }
+}

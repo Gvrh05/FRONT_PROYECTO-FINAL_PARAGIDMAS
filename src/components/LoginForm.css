@@ -1,0 +1,75 @@
+.login.reference-auth.profelink-login,
+.auth-page .login.reference-auth.profelink-login {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: none;
+  min-height: min(820px, calc(100svh - 100px));
+  margin: 0;
+  padding: clamp(24px, 5vw, 64px);
+  overflow: hidden;
+  border-radius: 24px;
+  background: radial-gradient(ellipse at 78% 35%, #1a3563 0, #101e38 36%, #0b1223 75%);
+  color: #f8fafc;
+}
+.login-constellations { position: absolute; z-index: -1; inset: 0; background: url('/getanyui/constellations.svg') center / cover; pointer-events: none; opacity: .65; }
+.login-split { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); align-items: center; gap: clamp(32px, 6vw, 100px); width: min(100%, 1100px); }
+.profelink-login .login-form-panel.card {
+  width: 100%;
+  display: grid;
+  gap: 20px;
+  padding: clamp(24px, 3.5vw, 44px);
+  background: #101a2eeb;
+  border: 1px solid #95b9ff26;
+  border-radius: 24px;
+  box-shadow: 0 24px 70px #0005, 0 0 40px #2563eb0a;
+  backdrop-filter: blur(16px);
+}
+.profelink-login .login-wordmark { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.login-wordmark img { border-radius: 10px; }
+.login-wordmark > span { font-size: 23px; font-weight: 750; letter-spacing: -.04em; }
+.login-wordmark small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: .03em; font-weight: 400; color: #a6b8d2; }
+.login.reference-auth.profelink-login h1 { margin: 0; font-size: clamp(27px, 3vw, 34px); line-height: 1.2; letter-spacing: -.04em; text-align: left; color: #f8fafc; }
+.login.reference-auth.profelink-login .eyebrow { margin: 0 0 -8px; font-size: 11px; line-height: 1.5; color: #8fbcff; text-align: left; }
+.login.reference-auth.profelink-login .muted { text-align: left; font-size: 14px; line-height: 1.7; margin: -8px 0 4px; color: #a6b8d2; }
+.profelink-login form { display: grid; gap: 10px; }
+.profelink-login form label { font-size: 13px; font-weight: 600; color: #dbe7f7; }
+.profelink-login form > input,
+.profelink-login .password-field .password-input { width: 100%; min-width: 0; min-height: 52px; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #edf2f8; color: #172033; font-size: 15px; box-shadow: none; }
+.profelink-login form input::placeholder { color: #65748b; }
+.profelink-login form > input { margin-bottom: 10px; }
+.profelink-login form input:focus { border-color: #60a5fa; outline: 3px solid #3b82f640; outline-offset: 2px; }
+.profelink-login .password-field { position: relative; }
+.profelink-login .password-field .password-input { padding-right: 54px; }
+.profelink-login .password-toggle { display: grid; place-items: center; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; min-height: 44px; padding: 10px; color: #475569; background: transparent; border: 0; border-radius: 8px; box-shadow: none; }
+.profelink-login .password-toggle:hover:not(:disabled) { background: #dbe3ee; color: #1e3a8a; box-shadow: none; }
+.profelink-login .password-toggle svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.profelink-login form .login-submit { min-height: 52px; margin-top: 12px; border: 1px solid #60a5fa50; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 8px 24px #2563eb30; font-size: 15px; font-weight: 700; }
+.profelink-login form .login-submit:hover:not(:disabled) { background: #2563eb; box-shadow: 0 10px 28px #2563eb45; }
+.profelink-login .alert:not(:empty) { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+.login-visual { text-align: center; min-width: 0; }
+.login-visual-kicker { color: #a7c8ff; font-size: 10px; letter-spacing: .22em; }
+.login-owl-orbit { position: relative; display: grid; place-items: center; width: min(100%, 440px); margin: 8px auto 0; aspect-ratio: 1; }
+.login-official-owl { width: 94%; height: auto; position: relative; border-radius: 50%; animation: profelink-float 6s ease-in-out infinite; box-shadow: 0 0 70px #60a5fa12; }
+.login-orbit-ring { position: absolute; inset: 3%; border: 1px solid #7db0ff26; border-radius: 50%; transform: rotate(-20deg) scaleX(1.1); }
+.login-orbit-star { position: absolute; color: #ffda36; font-size: 28px; animation: profelink-twinkle 4s ease-in-out infinite; }
+.login-orbit-star-one { right: 2%; top: 18%; }
+.login-orbit-star-two { left: 1%; bottom: 23%; font-size: 20px; animation-delay: -2s; }
+.login-visual h2 { margin: 0 0 12px; font-size: clamp(25px, 3vw, 36px); line-height: 1.25; letter-spacing: -.04em; color: #f8fafc; }
+.login-visual h2 span { color: #93c5fd; }
+.login-visual p { color: #a6b8d2; font-size: 14px; line-height: 1.8; margin: 0; }
+@keyframes profelink-float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-12px) rotate(1deg); } }
+@keyframes profelink-twinkle { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+@media (max-width: 780px) {
+  .login.reference-auth.profelink-login, .auth-page .login.reference-auth.profelink-login { padding: 24px 16px; border-radius: 16px; }
+  .login-split { grid-template-columns: minmax(0, 1fr); max-width: 440px; gap: 32px; }
+  .login-owl-orbit { width: 230px; }
+  .login-visual h2 { font-size: 25px; }
+  .login-visual p { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { .login-official-owl, .login-orbit-star { animation: none; } }
+
+.login-register { display: block; width: 100%; margin-top: 12px; padding: 12px; border: 1px solid #7668b5; border-radius: 12px; color: #ddd4ff; text-align: center; font-weight: 700; }
+.login-register:hover { background: #7668b52b; }

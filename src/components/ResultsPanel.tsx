@@ -2,11 +2,17 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { apiErrorMessage } from '../api/http'
 import { useSession } from '../session/session'
+import { z } from 'zod'
+import { FinalScores } from './LiveRoundPanel'
+
+const resultSchema = z.object({ scores: z.array(z.object({
+  playerName: z.string(), score: z.number(), rank: z.number(), avatarId: z.number().int().min(0).max(14).optional().catch(undefined),
+})) })
 
 export function ResultsPanel() {
   const { api, logout } = useSession()
   const [pin, setPin] = useState('')
-  const [result, setResult] = useState<unknown>(null)
+  const [result, setResult] = useState<z.infer<typeof resultSchema> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -18,7 +24,7 @@ export function ResultsPanel() {
     setResult(null)
     try {
       const response = await api.get(`/results/${encodeURIComponent(pin.trim())}`)
-      setResult(response.data)
+      setResult(resultSchema.parse(response.data))
     } catch (reason) {
       if ((reason as { response?: { status?: number } }).response?.status === 401) logout()
       else setError(apiErrorMessage(reason))
@@ -38,7 +44,7 @@ export function ResultsPanel() {
         <button type="submit" disabled={pending}>{pending ? 'Buscando…' : 'Consultar resultados'}</button>
       </form>
       {error ? <p role="alert" className="alert">{error}</p> : null}
-      {result !== null ? <pre className="result-output">{JSON.stringify(result, null, 2)}</pre> : null}
+      {result !== null ? <FinalScores scores={result.scores} /> : null}
     </section>
   )
 }

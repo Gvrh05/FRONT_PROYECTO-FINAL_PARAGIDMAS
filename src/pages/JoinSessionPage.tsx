@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { joinSession, roomCodeSchema } from '../api/gameSessions'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { OwlAvatar } from '../components/AvatarSelector'
+import { useAuth } from '../auth/useAuth'
 
 const formSchema = z.object({ roomCode: roomCodeSchema, name: z.string().trim().max(80, 'El nombre puede tener hasta 80 caracteres.') })
 
-export function JoinSessionPage() {
+export function JoinSessionPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate()
-  const [roomCode, setRoomCode] = useState('')
+  const [params] = useSearchParams()
+  const pin = params.get('pin')
+  const [roomCode, setRoomCode] = useState(pin && roomCodeSchema.safeParse(pin).success ? pin : '')
   const [name, setName] = useState('')
   const [error, setError] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
+  const { user } = useAuth()
   const alive = useRef(false)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
 
@@ -40,7 +45,8 @@ export function JoinSessionPage() {
       <label htmlFor="player-name">Nombre para la sala (opcional)</label>
       <input id="player-name" maxLength={80} value={name} onChange={(event) => setName(event.target.value)} disabled={busy} placeholder="Tu nombre" />
       <button type="submit" disabled={busy}>{busy ? 'Uniéndote…' : 'Unirse'}</button>
+      <OwlAvatar avatarId={user?.avatarId} />
     </form>
-    <Link to="/host/create">¿Eres anfitrión? Crea una sala</Link>
+    {!embedded && <Link to="/host/create">¿Eres anfitrión? Crea una sala</Link>}
   </section>
 }
