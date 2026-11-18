@@ -5,6 +5,7 @@ import { createGameSession, listAvailableQuizzes, quizIdSchema } from '../api/ga
 import type { AvailableQuiz, ScoringMode } from '../api/gameSessions'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { AvatarSelector, savedAvatar } from '../components/AvatarSelector'
+import { GoalKickRoomForm } from '../features/goal-kick/GoalKickRoomForm'
 
 export function HostCreateSessionPage() {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ export function HostCreateSessionPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const [avatarId, setAvatarId] = useState(savedAvatar)
+  const [activity, setActivity] = useState<'trivia' | 'goal-kick'>('trivia')
   const alive = useRef(false)
   useEffect(() => {
     alive.current = true
@@ -43,6 +45,8 @@ export function HostCreateSessionPage() {
   }
   return <section className="card">
     <p className="eyebrow">Anfitrión · 1 de 2</p><h1>Crea tu sala</h1>
+    <div className="field"><label htmlFor="create-room-activity">Actividad de la sala</label><select id="create-room-activity" value={activity} disabled={busy} onChange={event => setActivity(event.target.value === 'goal-kick' ? 'goal-kick' : 'trivia')}><option value="trivia">Trivia · Verdadero/Falso y opción múltiple</option><option value="goal-kick">Tiro al Arco · sin preguntas</option></select></div>
+    {activity === 'goal-kick' ? <GoalKickRoomForm onCancel={() => setActivity('trivia')} /> : <>
     <p>Elige un cuestionario con preguntas de Verdadero/Falso, opción múltiple o ambos tipos y comparte el código con tus jugadores.</p>
     <ErrorBanner error={error} />
     {loading ? <p role="status">Cargando tus cuestionarios…</p> : quizzes.length === 0
@@ -62,5 +66,6 @@ export function HostCreateSessionPage() {
         <AvatarSelector value={avatarId} onChange={setAvatarId} disabled={busy} />
         <button type="submit" disabled={busy || !selected}>{busy ? 'Creando sala…' : 'Crear sala'}</button>
       </form>}
+    </>}
   </section>
 }

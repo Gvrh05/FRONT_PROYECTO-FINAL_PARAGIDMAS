@@ -5,13 +5,17 @@ import { goalKickStateSchema } from '../features/goal-kick/contracts'
 export const roomCodeSchema = z.string().regex(/^\d{6}$/, 'El código debe tener exactamente 6 dígitos.')
 export const quizIdSchema = z.uuid('Selecciona un cuestionario válido.')
 const participantSchema = z.object({ userId: z.string(), name: z.string(), connected: z.boolean(), avatarId: z.number().int().min(0).max(14).optional(), ready: z.boolean().optional(), score: z.number().optional(), isHost: z.boolean().optional() })
+export const roomDetailsSchema = z.object({ name: z.string().min(1).max(150), description: z.string().max(2000), coverImageUrl: z.string().regex(/^\/public\/invitations\/[\w-]+\/cover$/).optional() })
+export const goalKickRoomDraftSchema = z.object({ name: z.string().trim().min(1, 'El nombre es obligatorio.').max(150), description: z.string().trim().max(2000) })
 const sessionSchema = z.object({
   sessionId: roomCodeSchema,
   roomCode: roomCodeSchema,
   invitationId: z.string().optional(),
   status: z.enum(['LOBBY', 'IN_PROGRESS', 'FINISHED']),
   hostId: z.string(),
-  quizId: quizIdSchema,
+  quizId: quizIdSchema.nullable(),
+  activity: z.literal('GOAL_KICK').optional(),
+  roomDetails: roomDetailsSchema.optional(),
   startedAt: z.string().optional(),
 })
 export type ScoringMode = 'classic' | 'speed' | 'precision'
@@ -44,6 +48,15 @@ export type AvailableQuiz = { id: string; title: string }
 
 export async function createGameSession(quizId: string, scoringMode?: ScoringMode): Promise<Session> {
   const { data } = await http.post('/game-sessions', { quizId: quizIdSchema.parse(quizId), ...(scoringMode && { scoringMode }) })
+  return sessionSchema.parse(data)
+}
+export async function createGoalKickRoom(draft: z.infer<typeof goalKickRoomDraftSchema>, image?: File | null, signal?: AbortSignal): Promise<Session> {
+  const fields = goalKickRoomDraftSchema.parse(draft)
+  const body = new FormData()
+  body.append('name', fields.name)
+  body.append('description', fields.description)
+  if (image) body.append('image', image)
+  const { data } = await http.post('/game-sessions/goal-kick', body, { signal })
   return sessionSchema.parse(data)
 }
 export async function getSession(roomCode: string, signal?: AbortSignal): Promise<SessionSnapshot> {

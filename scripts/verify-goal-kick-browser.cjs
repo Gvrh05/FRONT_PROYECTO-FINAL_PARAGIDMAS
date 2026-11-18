@@ -19,29 +19,38 @@ const { GameSessionService } = load('modules/game-session/services/game-session.
 const { GameSessionEvents } = load('modules/game-session/gateways/game-session.events');
 const { SessionManager } = load('modules/game-session/engine/session-manager');
 const { PublicInvitationsController } = load('modules/game-session/controllers/public-invitations.controller');
+const { GameSessionController } = load('modules/game-session/controllers/game-session.controller');
+const { GoalKickRoomImages } = load('modules/game-session/services/goal-kick-room-images.service');
 const { trajectory, resolveShot } = load('modules/game-session/engine/goal-kick-physics');
 
 async function main() {
   const manager = new SessionManager(), events = new GameSessionEvents();
   const hostId = randomUUID(), playerId = randomUUID(), quizId = randomUUID(), questionId = randomUUID();
-  let lastResult;
-  const repository = { create: input => input, save: input => Promise.resolve(input), update: (_query, input) => { if (input.result) lastResult = input.result; return Promise.resolve({ affected: 1 }); } };
+  let lastResult, sessionWrites = 0;
+  const repository = { create: input => input, save: input => { sessionWrites++; return Promise.resolve(input); }, update: (_query, input) => { if (input.result) lastResult = input.result; return Promise.resolve({ affected: 1 }); } };
   const quizzes = { findOneByOwner: () => Promise.resolve({ id: quizId, title: 'QA aislada' }), findAllByOwner: () => Promise.resolve([{ id: quizId, title: 'QA aislada' }]), findOne: () => Promise.resolve({ questions: [{ id: questionId, kind: 'TRUE_FALSE', questionText: 'Trivia conserva sus puntos', imageUrl: null, timeLimitSeconds: 2, options: [{ text: 'Verdadero', isCorrect: true }, { text: 'Falso', isCorrect: false }] }] }) };
   const service = new GameSessionService(manager, quizzes, repository, events);
-  const identities = { 'fixture-host': { sub: hostId, name: 'Docente QA', role: 'MASTER' }, 'fixture-player': { sub: playerId, name: 'Jugador QA', role: 'PROFESOR' } };
+  const identities = { 'fixture-host': { sub: hostId, name: 'Docente QA', role: 'MASTER', avatarId: 14 }, 'fixture-player': { sub: playerId, name: 'Jugador QA', role: 'PROFESOR', avatarId: 11 } };
   const verifier = { verify: token => identities[token] ? Promise.resolve(identities[token]) : Promise.reject(new Error('invalid fixture identity')) };
   const gateway = new GameGateway(service, verifier, events), invitations = new PublicInvitationsController(service);
+  const controller = new GameSessionController(service, new GoalKickRoomImages());
+  const multer = fromBackend('multer');
   const app = express(); app.use(express.json());
-  app.post('/auth/login', (req, res) => { const token = req.body.username === 'host_qa' ? 'fixture-host' : req.body.username === 'player_qa' ? 'fixture-player' : ''; if (!token || req.body.password !== 'fixture-only') return res.status(401).json({ message: 'Invalid fixture' }); const identity = identities[token]; res.json({ accessToken: token, user: { id: identity.sub, username: identity.name, role: identity.role } }); });
+  app.post('/auth/login', (req, res) => { const token = req.body.username === 'host_qa' ? 'fixture-host' : req.body.username === 'player_qa' ? 'fixture-player' : ''; if (!token || req.body.password !== 'fixture-only') return res.status(401).json({ message: 'Invalid fixture' }); const identity = identities[token]; res.json({ accessToken: token, user: { id: identity.sub, username: identity.name, role: identity.role, avatarId: identity.avatarId } }); });
   const wrap = handler => (req, res) => Promise.resolve().then(() => handler(req, res)).catch(() => res.status(400).json({ message: 'Fixture request rejected' }));
   const identity = req => { const value = identities[(req.headers.authorization || '').replace(/^Bearer /, '')]; if (!value) throw new Error('unauthorized'); return value; };
   app.get('/kahoot-api/quizzes', wrap((req, res) => { identity(req); res.json([]); }));
   app.get('/kahoot-api/game-sessions/available-quizzes', wrap(async (req, res) => res.json(await service.listAvailableQuizzes(identity(req).sub))));
-  app.post('/kahoot-api/game-sessions', wrap(async (req, res) => res.status(201).json(await service.createSession(identity(req).sub, req.body.quizId))));
+  app.post('/kahoot-api/game-sessions', wrap(async (req, res) => res.status(201).json(await service.createSession(identity(req).sub, req.body.quizId, req.body.scoringMode))));
+  app.post('/kahoot-api/game-sessions/goal-kick', multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 2 } }).single('image'), wrap(async (req, res) => {
+    req.user = identity(req);
+    res.status(201).json(await controller.createGoalKick(req, req.body, req.file));
+  }));
   app.get('/kahoot-api/game-sessions/:code', wrap((req, res) => res.json(service.getSessionByCode(req.params.code, identity(req).sub))));
   app.post('/kahoot-api/game-sessions/:code/join', wrap((req, res) => res.json(service.joinSession({ roomCode: req.params.code, userId: identity(req).sub, name: req.body.name }))));
   app.post('/kahoot-api/game-sessions/:code/start', wrap(async (req, res) => res.json(await service.startSession(req.params.code, identity(req).sub))));
   app.get('/kahoot-api/public/invitations/:id', wrap((req, res) => res.json(invitations.get(req.params.id, req))));
+  app.get('/kahoot-api/public/invitations/:id/cover', wrap((req, res) => invitations.cover(req.params.id, req, res)));
   app.post('/kahoot-api/public/invitations/:id/participants', wrap((req, res) => res.json(invitations.create(req.params.id, req.body, req))));
   const http = createServer(app), sockets = new Server(http), namespace = sockets.of('/game'); gateway.afterInit(namespace);
   namespace.on('connection', client => {
@@ -54,7 +63,7 @@ async function main() {
     await new Promise(resolve => http.listen(0, '127.0.0.1', resolve));
     const target = `http://127.0.0.1:${http.address().port}`;
     const { createServer: createVite } = await import(pathToFileURL(path.join(front, 'node_modules/vite/dist/node/index.js')).href);
-    vite = await createVite({ root: front, logLevel: 'error', define: { 'import.meta.env.VITE_API_URL': JSON.stringify('/kahoot-api'), 'import.meta.env.VITE_AUTH_API_URL': JSON.stringify('/auth'), 'import.meta.env.VITE_WS_URL': JSON.stringify('') }, server: { host: '127.0.0.1', port: 0, proxy: { '/auth': { target }, '/kahoot-api': { target }, '/socket.io': { target, ws: true } } } });
+    vite = await createVite({ root: front, logLevel: 'error', define: { 'import.meta.env.VITE_API_URL': JSON.stringify('/kahoot-api'), 'import.meta.env.VITE_AUTH_API_URL': JSON.stringify('/auth'), 'import.meta.env.VITE_WS_URL': JSON.stringify(''), 'import.meta.env.VITE_GOAL_KICK_ENABLED': JSON.stringify('true') }, server: { host: '127.0.0.1', port: 0, proxy: { '/auth': { target }, '/kahoot-api': { target }, '/socket.io': { target, ws: true } } } });
     await vite.listen();
     const origin = `http://127.0.0.1:${vite.httpServer.address().port}`;
     browser = await chromium.launch({ channel: 'msedge', headless: true });
@@ -64,6 +73,7 @@ async function main() {
     const login = async (page, username) => { await page.goto(origin + '/login'); await page.getByLabel('Usuario', { exact: true }).fill(username); await page.getByLabel('Contraseña', { exact: true }).fill('fixture-only'); await page.getByRole('button', { name: 'Ingresar', exact: true }).click(); await page.waitForURL('**/dashboard'); };
     await login(host, 'host_qa');
     await host.goto(origin + '/host/create');
+    await host.getByLabel('Modo de puntuación', { exact: true }).selectOption('classic');
     await host.getByRole('button', { name: 'Búho científico loco', exact: true }).click();
     await host.getByRole('button', { name: 'Crear sala', exact: true }).click();
     await host.waitForURL('**/host/lobby/*');
@@ -71,7 +81,7 @@ async function main() {
     await login(account, 'player_qa'); await account.goto(origin + '/join');
     await account.getByLabel('Código de sala', { exact: true }).fill(pin);
     await account.getByLabel('Nombre para la sala (opcional)').fill('Jugador QA');
-    await account.getByRole('button', { name: 'Búho pirata', exact: true }).click();
+    await account.locator('form').getByRole('img', { name: 'Búho pirata', exact: true }).waitFor();
     await account.getByRole('button', { name: 'Unirse', exact: true }).click();
     await account.waitForURL('**/play/lobby/*');
     await guest.goto(origin + '/join/' + room.invitationId);
@@ -79,6 +89,7 @@ async function main() {
     await guest.getByRole('button', { name: 'Búho astronauta', exact: true }).click();
     await guest.getByRole('button', { name: 'Entrar', exact: true }).click();
     await guest.getByRole('status').filter({ hasText: /^Conectado$/ }).waitFor();
+    assert.equal(room.players.get(playerId).avatarId, 11);
     await host.getByRole('radio', { name: 'Minijuego: Tiro al Arco', exact: true }).check();
     await host.getByRole('button', { name: 'Iniciar Tiro al Arco · 40 s', exact: true }).click();
     await guest.getByRole('button', { name: 'Fijar dirección', exact: true }).waitFor();
@@ -108,7 +119,7 @@ async function main() {
     if (process.env.VERIFY_SCREENSHOT_DIR) await guest.screenshot({ path: path.join(process.env.VERIFY_SCREENSHOT_DIR, 'goal-kick-mobile.png'), fullPage: true });
     await host.getByRole('button', { name: 'Volver al lobby', exact: true }).waitFor({ timeout: 45000 });
     await host.getByRole('button', { name: 'Volver al lobby', exact: true }).click();
-    await host.getByRole('radio', { name: 'Trivia (Verdadero/Falso)', exact: true }).check();
+    await host.getByRole('radio', { name: 'Trivia', exact: true }).check();
     await host.getByRole('button', { name: 'Comenzar Partida', exact: true }).click();
     await guest.getByRole('button', { name: 'Verdadero', exact: true }).click();
     await guest.getByText('+25 puntos', { exact: true }).waitFor();
@@ -116,8 +127,38 @@ async function main() {
     await guest.getByRole('heading', { name: 'Podio de ganadores', exact: true }).waitFor();
     assert.equal(lastResult.scores.find(p => p.playerName === 'Invitado QA').score, 25);
     assert.equal(lastResult.scores.find(p => p.playerName === 'Invitado QA').correctAnswersCount, 1);
+    // Standalone authoring: no quiz/question creation; real multipart image decoder.
+    const writesBeforeStandalone = sessionWrites;
+    await host.goto(origin + '/host/create');
+    await host.getByLabel('Actividad de la sala', { exact: true }).selectOption('goal-kick');
+    assert.equal(await host.getByLabel('Tu cuestionario', { exact: true }).count(), 0);
+    await host.getByLabel('Nombre de la sala', { exact: true }).fill('Copa del aula QA');
+    await host.getByLabel('Descripción (opcional)', { exact: true }).fill('Una sala sin preguntas');
+    const cover = await fromBackend('sharp')({ create: { width: 120, height: 80, channels: 3, background: '#23504d' } }).png().toBuffer();
+    await host.getByLabel('Imagen (opcional)', { exact: true }).setInputFiles({ name: 'room.png', mimeType: 'image/png', buffer: cover });
+    if (process.env.VERIFY_SCREENSHOT_DIR) await host.screenshot({ path: path.join(process.env.VERIFY_SCREENSHOT_DIR, 'goal-kick-create-room.png'), fullPage: true });
+    await host.getByRole('button', { name: 'Crear sala de Tiro al Arco', exact: true }).click();
+    await host.waitForURL('**/host/lobby/*');
+    const standalonePin = new URL(host.url()).pathname.split('/').pop(), standaloneRoom = manager.requireSession(standalonePin);
+    assert.equal(standaloneRoom.quizId, null);
+    assert.equal(sessionWrites, writesBeforeStandalone);
+    await host.reload();
+    await host.getByRole('heading', { name: 'Copa del aula QA', exact: true }).waitFor();
+    assert.equal(await host.getByRole('button', { name: 'Comenzar Partida', exact: true }).count(), 0);
+    await guest.goto(origin + '/join/' + standaloneRoom.invitationId);
+    await guest.getByText('Una sala sin preguntas', { exact: true }).waitFor();
+    await guest.getByLabel('Tu nombre', { exact: true }).fill('Jugador sin cuestionario');
+    await guest.getByRole('button', { name: 'Entrar', exact: true }).click();
+    await guest.getByRole('status').filter({ hasText: /^Conectado$/ }).waitFor();
+    await guest.getByRole('img', { name: 'Foto de la sala Copa del aula QA', exact: true }).waitFor();
+    assert.equal(await guest.locator('.goal-kick-room-cover').evaluate(image => image.complete && image.naturalWidth > 0), true);
+    await host.getByRole('button', { name: 'Iniciar Tiro al Arco · 40 s', exact: true }).click();
+    await guest.getByRole('button', { name: 'Fijar dirección', exact: true }).waitFor();
+    await host.getByRole('button', { name: 'Cancelar minijuego', exact: true }).click();
+    await host.getByRole('button', { name: 'Volver al lobby', exact: true }).click();
+    await guest.getByRole('button', { name: '¡Estoy listo!', exact: true }).waitFor();
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ pass: true, coverage: 'real UI + real WS gateway/engine; fixture account Auth/DB; 3 contexts; reload in flight; confirmed goal; 40s deadline; return; trivia regression', viewport: '390x844', engine: 'headless Edge', frameMetrics: metrics }));
+    console.log(JSON.stringify({ pass: true, coverage: 'real UI + real WS gateway/engine; fixture account Auth/DB; 3 contexts; reload in flight; confirmed goal; 40s deadline; return; trivia regression; standalone room authoring with photo and no quiz, reload and guest play', viewport: '390x844', engine: 'headless Edge', frameMetrics: metrics }));
   } finally { if (browser) await browser.close(); manager.onModuleDestroy(); if (vite) await vite.close(); await new Promise(resolve => { void sockets.close(() => resolve()); }); }
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

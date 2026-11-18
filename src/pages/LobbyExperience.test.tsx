@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HostLobbyPage } from './HostLobbyPage'
 import { GuestJoinPage } from './GuestJoinPage'
@@ -25,6 +25,8 @@ const participants = [
 ]
 const session = { sessionId: '123456', roomCode: '123456', hostId: 'host', status: 'LOBBY', participants }
 const base = { session, connected: true, loading: false, error: null, setError: vi.fn(), pending: false, send: mocks.send, setReady: mocks.ready, applyStarted: mocks.applyStarted, goalKickPending: false, goalKickError: '', sendGoalKickCommand: mocks.sendGoalKick }
+
+afterEach(() => vi.unstubAllEnvs())
 
 beforeEach(() => {
   vi.stubEnv('VITE_GOAL_KICK_ENABLED', 'true')
@@ -78,6 +80,26 @@ it('bloquea ambos modos mientras espera confirmación del minijuego', () => {
   render(<MemoryRouter><HostLobbyPage roomCode="123456" /></MemoryRouter>)
   expect(screen.getByRole('button', { name: 'Iniciando…' })).toBeDisabled()
   for (const radio of screen.getAllByRole('radio')) expect(radio).toBeDisabled()
+})
+
+it('una sala de fútbol independiente no ofrece trivia y mantiene sus datos tras recuperar estado', () => {
+  vi.stubEnv('VITE_GOAL_KICK_ENABLED', 'false')
+  mocks.lobby.mockReturnValue({ ...base, session: { ...session, quizId: null, activity: 'GOAL_KICK', roomDetails: { name: 'Copa del aula', description: 'Solo fútbol' } } })
+  render(<MemoryRouter><HostLobbyPage roomCode="123456" /></MemoryRouter>)
+  expect(screen.getByRole('heading', { name: 'Copa del aula' })).toBeVisible()
+  expect(screen.queryByRole('radio', { name: 'Trivia' })).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Iniciar Tiro al Arco · 40 s' }))
+  expect(mocks.sendGoalKick).toHaveBeenCalledExactlyOnceWith({ action: 'start' })
+  expect(mocks.start).not.toHaveBeenCalled()
+})
+
+it('conserva el flag de despliegue para el selector en salas de trivia', async () => {
+  vi.stubEnv('VITE_GOAL_KICK_ENABLED', 'false')
+  render(<MemoryRouter><HostLobbyPage roomCode="123456" /></MemoryRouter>)
+  expect(screen.queryByRole('radio', { name: 'Minijuego: Tiro al Arco' })).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Comenzar Partida' }))
+  await waitFor(() => expect(mocks.applyStarted).toHaveBeenCalled())
+  expect(mocks.sendGoalKick).not.toHaveBeenCalled()
 })
 
 it('no ofrece controles de inicio sin conexión o a una identidad que no es host', () => {

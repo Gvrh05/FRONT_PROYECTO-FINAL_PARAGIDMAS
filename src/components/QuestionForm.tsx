@@ -17,6 +17,9 @@ import {
   type QuestionDraft,
 } from '../features/quizzes/validation'
 import { QuestionImageInput } from './QuestionImageInput'
+import { ActivityTypeSelect } from './ActivityTypeSelect'
+import type { ActivityType } from './ActivityTypeSelect'
+import { GoalKickRoomForm } from '../features/goal-kick/GoalKickRoomForm'
 
 interface QuestionFormProps {
   quizId: string
@@ -51,6 +54,13 @@ export function QuestionForm({
   const [pending, setPending] = useState(false)
   const [partial, setPartial] = useState<PartialSave | null>(null)
   const pendingRef = useRef(false)
+  const [goalKick, setGoalKick] = useState(false)
+
+  function selectActivity(kind: ActivityType) {
+    if (kind === 'GOAL_KICK') { setGoalKick(true); return }
+    setGoalKick(false)
+    if (kind !== (draft.kind ?? 'MULTIPLE_CHOICE')) setDraft(current => ({ ...current, kind, options: kind === 'TRUE_FALSE' ? ['Verdadero', 'Falso'] : ['', '', '', ''], correctIndex: null }))
+  }
 
   const baseline = question
     ? { timeLimitSeconds: question.timeLimitSeconds, points: question.points }
@@ -180,6 +190,11 @@ export function QuestionForm({
     }
   }
 
+  if (goalKick) return <section className="card">
+    <ActivityTypeSelect value="GOAL_KICK" onChange={selectActivity} />
+    <GoalKickRoomForm onCancel={() => setGoalKick(false)} />
+  </section>
+
   return (
     <section className="card" aria-labelledby="question-form-title">
       <h2 id="question-form-title">
@@ -205,6 +220,7 @@ export function QuestionForm({
       ) : null}
 
       <form onSubmit={submit} noValidate>
+        <ActivityTypeSelect value={draft.kind ?? 'MULTIPLE_CHOICE'} onChange={selectActivity} disabled={pending || Boolean(partial)} allowGoalKick={!editing} />
         <div className="field">
           <label htmlFor="question-text">Enunciado</label>
           <textarea
@@ -227,16 +243,6 @@ export function QuestionForm({
           ) : null}
         </div>
 
-        <div className="field">
-          <label htmlFor="question-kind">Tipo de pregunta</label>
-          <select id="question-kind" value={draft.kind ?? 'MULTIPLE_CHOICE'} disabled={pending || Boolean(partial)} onChange={(event) => {
-            const kind = event.target.value === 'TRUE_FALSE' ? 'TRUE_FALSE' : 'MULTIPLE_CHOICE'
-            setDraft((current) => ({ ...current, kind, options: kind === 'TRUE_FALSE' ? ['Verdadero', 'Falso'] : ['', '', '', ''], correctIndex: null }))
-          }}>
-            <option value="MULTIPLE_CHOICE">Opción múltiple</option>
-            <option value="TRUE_FALSE">Verdadero / Falso</option>
-          </select>
-        </div>
         <fieldset className="options">
           <legend>Opciones y respuesta correcta</legend>
           {draft.options.map((text, index) => (

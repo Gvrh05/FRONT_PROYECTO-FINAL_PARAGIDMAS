@@ -12,6 +12,7 @@ import { InvitationLink } from '../components/InvitationLink'
 import { savedAvatar } from '../components/AvatarSelector'
 import { GoalKickHostPanel } from '../features/goal-kick/GoalKickHostPanel'
 import './HostLobbyPage.css'
+import { GoalKickRoomDetails } from '../features/goal-kick/GoalKickRoomDetails'
 
 export function HostLobbyPage({ roomCode }: { roomCode: string }) {
   const { user } = useAuth()
@@ -20,6 +21,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
   const goalKickEnabled = import.meta.env.VITE_GOAL_KICK_ENABLED === 'true'
   const [busy, setBusy] = useState(false)
   const [activity, setActivity] = useState<'trivia' | 'goal-kick'>('trivia')
+  const selectedActivity = session?.activity === 'GOAL_KICK' || (goalKickEnabled && activity === 'goal-kick') ? 'goal-kick' : 'trivia'
   const alive = useRef(false)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
   // The host is listed but NEVER counts: there must be another connected identity.
@@ -33,7 +35,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
 
   async function start() {
     if (!canStart) return
-    if (goalKickEnabled && activity === 'goal-kick') {
+    if (selectedActivity === 'goal-kick') {
       sendGoalKickCommand({ action: 'start' })
       return
     }
@@ -53,6 +55,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
     <ErrorBanner error={error || (session && !isHost ? new AppError('', 403) : null)} />
     {loading && <p role="status">Cargando la sala…</p>}
     {session && <>
+      <GoalKickRoomDetails details={session.roomDetails} />
       <RoomCodeBadge roomCode={session.roomCode} />
       {isHost && !goalKick && session.status === 'LOBBY' && session.invitationId && <InvitationLink invitationId={session.invitationId} />}
       {isHost && session.status === 'LOBBY' && <Link to={'/join?pin=' + session.roomCode}>Enlace para jugadores con cuenta</Link>}
@@ -63,7 +66,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
       {session.status === 'LOBBY' && <>
         {!hasOtherConnectedPlayer && <p>Para iniciar, comparte el código con alguien que entre con otra cuenta. Si estás probando en el mismo equipo, abre una ventana privada e inicia sesión allí con la cuenta del jugador.</p>}
         <div className="lobby-welcome"><span className="lobby-owl" aria-hidden="true">🦉</span><h2>¡Preparados para aprender!</h2><p role="status">Listos: {readyCount} / {players.length}</p><p>{allReady ? 'Todos están listos. ¡Vamos a jugar!' : 'Los invitados pueden marcarse listos. También puedes forzar el inicio.'}</p></div>
-        {goalKickEnabled && isHost && <fieldset className="host-activity-selector" disabled={busy || goalKickPending || !connected}>
+        {goalKickEnabled && isHost && session.activity !== 'GOAL_KICK' && <fieldset className="host-activity-selector" disabled={busy || goalKickPending || !connected}>
           <legend>Elige la actividad</legend>
           <div className="host-activity-options">
             <label className="host-activity-option">
@@ -76,7 +79,7 @@ export function HostLobbyPage({ roomCode }: { roomCode: string }) {
             </label>
           </div>
         </fieldset>}
-        {isHost && <button className="start-game-button" type="button" disabled={!canStart} onClick={() => void start()}>{busy || goalKickPending ? 'Iniciando…' : activity === 'goal-kick' ? 'Iniciar Tiro al Arco · 40 s' : 'Comenzar Partida'}</button>}
+        {isHost && <button className="start-game-button" type="button" disabled={!canStart} onClick={() => void start()}>{busy || goalKickPending ? 'Iniciando…' : selectedActivity === 'goal-kick' ? 'Iniciar Tiro al Arco · 40 s' : 'Comenzar Partida'}</button>}
         {goalKickError && <p role="alert">{goalKickError}</p>}
         {!allReady && canStart && <small>Comenzar ahora forzará el inicio aunque falten jugadores por prepararse.</small>}
       </>}

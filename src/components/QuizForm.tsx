@@ -4,6 +4,7 @@ import { apiErrorMessage } from '../api/http'
 import { createQuiz, updateQuiz } from '../api/quizzes'
 import type { QuizSummary } from '../types'
 import { useSession } from '../session/session'
+import { GoalKickRoomForm } from '../features/goal-kick/GoalKickRoomForm'
 import {
   buildQuizPatch,
   QUIZ_DESCRIPTION_MAX,
@@ -29,6 +30,7 @@ export function QuizForm({ quiz, onSaved, onCancel }: QuizFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const pendingRef = useRef(false)
+  const [goalKick, setGoalKick] = useState(false)
 
   const editing = Boolean(quiz)
 
@@ -85,11 +87,13 @@ export function QuizForm({ quiz, onSaved, onCancel }: QuizFormProps) {
   }
 
   if (quiz?.isDemo) return <section className="card"><p>El cuestionario demo es de solo lectura.</p><button onClick={onCancel}>Volver</button></section>
+  if (goalKick) return <section className="card"><GoalKickRoomForm onCancel={() => setGoalKick(false)} /></section>
   return (
     <section className="card" aria-labelledby="quiz-form-title">
       <h2 id="quiz-form-title">
         {editing ? 'Editar cuestionario' : 'Nuevo cuestionario'}
       </h2>
+      {!editing && <div className="actions"><button type="button" className="secondary" disabled={pending} onClick={() => setGoalKick(true)}>Crear Tiro al Arco sin preguntas</button></div>}
       <form onSubmit={submit} noValidate>
         <div className="field">
           <label htmlFor="quiz-title">Título</label>
